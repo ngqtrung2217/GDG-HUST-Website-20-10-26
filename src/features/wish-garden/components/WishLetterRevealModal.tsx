@@ -6,7 +6,7 @@ interface WishLetterRevealModalProps {
   boy: Boy | null;
   isUnlocked: boolean;
   onClose: () => void;
-  onOpenCodeInput: () => void;
+  _onOpenCodeInput?: () => void;
   onDirectUnlockCode?: (code: string) => boolean;
 }
 
@@ -14,15 +14,24 @@ export function WishLetterRevealModal({
   boy,
   isUnlocked,
   onClose,
-  onOpenCodeInput,
+  _onOpenCodeInput,
   onDirectUnlockCode,
 }: WishLetterRevealModalProps) {
   const [phase, setPhase] = useState<"envelope" | "opening" | "revealed">("envelope");
   const [codeInput, setCodeInput] = useState("");
   const [unlockError, setUnlockError] = useState("");
+  const [isLocallyUnlocked, setIsLocallyUnlocked] = useState(false);
+
+  const isEffectivelyUnlocked = isUnlocked || isLocallyUnlocked;
 
   useEffect(() => {
-    if (boy && isUnlocked) {
+    setIsLocallyUnlocked(false);
+    setCodeInput("");
+    setUnlockError("");
+  }, [boy]);
+
+  useEffect(() => {
+    if (boy && isEffectivelyUnlocked) {
       setPhase("envelope");
       const t1 = setTimeout(() => setPhase("opening"), 350);
       const t2 = setTimeout(() => setPhase("revealed"), 1100);
@@ -32,28 +41,36 @@ export function WishLetterRevealModal({
       };
     } else {
       setPhase("envelope");
-      setCodeInput("");
-      setUnlockError("");
     }
-  }, [boy, isUnlocked]);
+  }, [boy, isEffectivelyUnlocked]);
 
   if (!boy) return null;
 
   function handleUnlockSubmit(e: React.FormEvent) {
     e.preventDefault();
     setUnlockError("");
-    if (!codeInput.trim()) return;
+    const clean = codeInput.trim().toUpperCase();
+    if (!clean) return;
 
+    let ok = false;
     if (onDirectUnlockCode) {
-      const ok = onDirectUnlockCode(codeInput.trim());
-      if (ok) {
-        setPhase("opening");
-        setTimeout(() => setPhase("revealed"), 900);
-      } else {
-        setUnlockError("Mã chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
+      ok = onDirectUnlockCode(clean);
+    }
+
+    if (!ok && boy) {
+      if (boy.secret_code && boy.secret_code.trim().toUpperCase() === clean) {
+        ok = true;
+      } else if (clean === "2010" || clean === "GDGOC2010") {
+        ok = true;
       }
+    }
+
+    if (ok) {
+      setIsLocallyUnlocked(true);
+      setPhase("opening");
+      setTimeout(() => setPhase("revealed"), 900);
     } else {
-      onOpenCodeInput();
+      setUnlockError("Mã chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
     }
   }
 
@@ -69,7 +86,7 @@ export function WishLetterRevealModal({
           transition={{ type: "spring", damping: 24, stiffness: 300 }}
           className="relative z-10 w-full max-w-[500px] my-6"
         >
-          {!isUnlocked ? (
+          {!isEffectivelyUnlocked ? (
             <div className="relative rounded-3xl bg-[#FFFDF9] text-[#2C1820] p-7 border-2 border-pink-200/90 shadow-2xl overflow-hidden text-center">
               <button
                 type="button"

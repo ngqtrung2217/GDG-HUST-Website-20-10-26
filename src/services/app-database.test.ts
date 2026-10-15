@@ -74,3 +74,34 @@ test("submitQuizAnswer handles multiple attempts and reveals answer", () => {
   const correctAttempt = db.submitQuizAnswer(girl.token, 0, q.correct_key);
   assert.equal(correctAttempt.correct, true);
 });
+
+test("verifySecretCode unlocks tree and individual boy letters even without girl token", () => {
+  const db = new AppDatabaseService({
+    isMemoryOnly: true,
+    enableSupabase: false,
+  });
+
+  const treeBefore = db.getTreeData();
+  const minhAnh = treeBefore.boys.find((b) => b.name === "Minh Anh");
+  assert.ok(minhAnh);
+  assert.equal(treeBefore.isBoyUnlocked(minhAnh!), false);
+  assert.equal(treeBefore.isUnlocked, false);
+
+  // Unlock specifically with boy's secret code (SEN)
+  const resBoy = db.verifySecretCode("  sen  ");
+  assert.equal(resBoy.success, true);
+  assert.equal(resBoy.unlockedBoy?.name, "Minh Anh");
+
+  const treeAfterBoy = db.getTreeData();
+  assert.equal(treeAfterBoy.isBoyUnlocked(minhAnh!), true);
+
+  // Group code (2010) unlocks all boys
+  const resGroup = db.verifySecretCode("2010");
+  assert.equal(resGroup.success, true);
+  const treeAfterGroup = db.getTreeData();
+  assert.equal(treeAfterGroup.isUnlocked, true);
+  treeAfterGroup.boys.forEach((b) => {
+    assert.equal(treeAfterGroup.isBoyUnlocked(b), true);
+  });
+});
+

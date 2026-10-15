@@ -51,9 +51,14 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
     refreshTree();
   }, [refreshTree]);
 
-  function handleUnlockSuccess(group: Group, _boys: Boy[]) {
+  function handleUnlockSuccess(group: Group, _boys: Boy[], unlockedBoy?: Boy) {
     refreshTree();
-    setNotification(`Toàn bộ quà từ ${group.group_name} đã được mở thành công trên cây!`);
+    if (unlockedBoy) {
+      setSelectedBoy(unlockedBoy);
+      setNotification(`Mã chính xác! Đã mở thư của bạn ${unlockedBoy.name}!`);
+    } else {
+      setNotification(`Toàn bộ quà từ ${group.group_name} đã được mở thành công trên cây!`);
+    }
     setTimeout(() => setNotification(""), 4500);
   }
 
@@ -65,7 +70,9 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
   }
 
   function handleDirectUnlock(code: string): boolean {
-    const res = activeDb.verifySecretCode(code, activeToken);
+    const clean = code.trim().toUpperCase();
+    if (!clean) return false;
+    const res = activeDb.verifySecretCode(clean, activeToken);
     if (res.success) {
       refreshTree();
       if (res.unlockedBoy) {

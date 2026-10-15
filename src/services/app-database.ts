@@ -19,7 +19,56 @@ const DEFAULT_GROUPS: Group[] = [
   },
 ];
 
-const DEFAULT_BOYS: Boy[] = [];
+const DEFAULT_BOYS: Boy[] = [
+  {
+    id: "boy_1",
+    group_id: "grp_hust",
+    name: "Minh Anh",
+    email: "minhanh@hust.edu.vn",
+    secret_code: "SEN",
+    description: "Bạn nam Core Team Tech đeo kính gọng đen, hay mặc áo khoác nỉ xám, ngồi bàn 3 tầng 2 Thư viện Tạ Quang Bửu.",
+    personal_wish: "Cảm ơn bạn vì những buổi chạy dự án đến khuya mà vẫn luôn tràn đầy năng lượng. Chúc bạn 20/10 thật nhẹ nhàng, bình an và luôn cười tươi nhé!",
+    ornament_type: "lotus",
+    gift_hint: "Một bookmark giấy dó thủ công kèm kẹp tóc xinh xắn",
+    has_written_wish: true,
+  },
+  {
+    id: "boy_2",
+    group_id: "grp_hust",
+    name: "Đức Huy",
+    email: "duchuy@hust.edu.vn",
+    secret_code: "MAI",
+    description: "Bạn nam cao ráo, đeo đồng hồ thông minh màu cam, balo có móc khóa GDG HUST.",
+    personal_wish: "Bạn luôn chu đáo nhớ lịch deadline cho cả nhóm. Hôm nay hãy để mọi người chăm sóc và gửi tặng bạn những điều ngọt ngào nhất nha. Chúc bạn 20/10 ấm áp!",
+    ornament_type: "giftbox",
+    gift_hint: "Ly giữ nhiệt khắc tên GDGoC HUST",
+    has_written_wish: true,
+  },
+  {
+    id: "boy_3",
+    group_id: "grp_hust",
+    name: "Quang Khải",
+    email: "quangkhai@hust.edu.vn",
+    secret_code: "DAO",
+    description: "Bạn nam hay mang theo bình nước màu xanh mint trà đào, nụ cười rất duyên.",
+    personal_wish: "Chúc bạn 20/10 ngập tràn niềm vui! Bạn luôn rất giỏi giang, nhiệt huyết và đáng yêu trong mắt mọi người.",
+    ornament_type: "peach",
+    gift_hint: "Hộp bánh quy bơ nướng hạnh nhân thơm ngon",
+    has_written_wish: true,
+  },
+  {
+    id: "boy_4",
+    group_id: "grp_hust",
+    name: "Tuấn Kiệt",
+    email: "tuankiet@hust.edu.vn",
+    secret_code: "LAN",
+    description: "Bạn nam có giọng nói trầm ấm, hay ngồi ở sảnh nhà C7, tay hay gõ phím cơ switch êm.",
+    personal_wish: "Chúc các bạn nữ luôn giữ vững ngọn lửa đam mê công nghệ, tự tin tỏa sáng và luôn được trân quý mỗi ngày.",
+    ornament_type: "snowglobe",
+    gift_hint: "Một chậu sen đá mini để bàn làm việc",
+    has_written_wish: true,
+  },
+];
 
 const DEFAULT_GIRLS: Girl[] = [
   {
@@ -127,15 +176,46 @@ export class AppDatabaseService {
   private storageKey: string;
   private isMemoryOnly: boolean;
   private enableSupabase: boolean;
+  private sessionUnlockedCodes: Set<string>;
 
   constructor(options?: AppDatabaseOptions) {
     this.storageKey = options?.storageKey || "bloom_2010_database_v8";
     this.isMemoryOnly = Boolean(options?.isMemoryOnly);
     this.enableSupabase = Boolean(options?.enableSupabase);
+    this.sessionUnlockedCodes = this.loadSessionUnlockedCodes();
     this.state = this.loadFromStorage();
 
     if (this.enableSupabase && supabase.isConfigured()) {
       this.syncFromSupabase();
+    }
+  }
+
+  private loadSessionUnlockedCodes(): Set<string> {
+    const set = new Set<string>();
+    if (this.isMemoryOnly || typeof localStorage === "undefined") return set;
+    try {
+      const raw = localStorage.getItem("bloom_session_unlocked_codes");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((c) => set.add(String(c).trim().toUpperCase()));
+        }
+      }
+    } catch (e) {
+      void e;
+    }
+    return set;
+  }
+
+  private saveSessionUnlockedCodes(): void {
+    if (this.isMemoryOnly || typeof localStorage === "undefined") return;
+    try {
+      localStorage.setItem(
+        "bloom_session_unlocked_codes",
+        JSON.stringify(Array.from(this.sessionUnlockedCodes))
+      );
+    } catch (e) {
+      void e;
     }
   }
 
@@ -159,13 +239,17 @@ export class AppDatabaseService {
         };
       }
       const parsed = JSON.parse(raw) as DatabaseState;
-      if (parsed.questions) {
-        parsed.questions = parsed.questions.filter((q) => q.id !== "q_5");
+      if (!parsed.boys || parsed.boys.length === 0) {
+        parsed.boys = JSON.parse(JSON.stringify(DEFAULT_BOYS));
       }
-      if (parsed.boys) {
-        parsed.boys = parsed.boys.filter(
-          (b) => !["boy_1", "boy_2", "boy_3", "boy_4", "boy_5"].includes(b.id)
-        );
+      if (!parsed.groups || parsed.groups.length === 0) {
+        parsed.groups = JSON.parse(JSON.stringify(DEFAULT_GROUPS));
+      }
+      if (!parsed.girls || parsed.girls.length === 0) {
+        parsed.girls = JSON.parse(JSON.stringify(DEFAULT_GIRLS));
+      }
+      if (!parsed.questions || parsed.questions.length === 0) {
+        parsed.questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
       }
       return parsed;
     } catch {
@@ -502,26 +586,47 @@ export class AppDatabaseService {
     unlockedBoy?: Boy;
   } {
     const clean = code.trim().toUpperCase();
-    const group = this.state.groups.find((g) => g.secret_code.toUpperCase() === clean) || this.state.groups[0];
+    if (!clean) return { success: false };
 
-    const isGroupCode = this.state.groups.some((g) => g.secret_code.toUpperCase() === clean);
-    const matchingBoy = this.state.boys.find(
-      (b) => b.secret_code && b.secret_code.toUpperCase() === clean
+    const matchingGroup = this.state.groups.find(
+      (g) => g.secret_code.toUpperCase() === clean
     );
+    const matchingBoy = this.state.boys.find(
+      (b) => b.secret_code && b.secret_code.trim().toUpperCase() === clean
+    );
+
+    const isGroupCode = Boolean(matchingGroup);
 
     if (!isGroupCode && !matchingBoy) {
       return { success: false };
     }
 
-    const boys = this.state.boys.filter((b) => b.group_id === group.id);
+    const group =
+      matchingGroup ||
+      (matchingBoy ? this.state.groups.find((g) => g.id === matchingBoy.group_id) : undefined) ||
+      this.state.groups[0];
+
+    const boys = group
+      ? this.state.boys.filter((b) => b.group_id === group.id)
+      : this.state.boys;
+
+    // Record in session unlocked codes for immediate and persistent session access
+    this.sessionUnlockedCodes.add(clean);
+    if (isGroupCode && group) {
+      this.sessionUnlockedCodes.add(group.secret_code.toUpperCase());
+    }
+    if (matchingBoy?.secret_code) {
+      this.sessionUnlockedCodes.add(matchingBoy.secret_code.trim().toUpperCase());
+    }
+    this.saveSessionUnlockedCodes();
 
     if (girlToken) {
       const girl = this.getGirlByToken(girlToken);
       if (girl) {
-        const unlocked = new Set(girl.unlocked_codes || []);
+        const unlocked = new Set((girl.unlocked_codes || []).map((c) => c.toUpperCase()));
         unlocked.add(clean);
-        if (isGroupCode && group) unlocked.add(group.secret_code);
-        if (matchingBoy?.secret_code) unlocked.add(matchingBoy.secret_code);
+        if (isGroupCode && group) unlocked.add(group.secret_code.toUpperCase());
+        if (matchingBoy?.secret_code) unlocked.add(matchingBoy.secret_code.trim().toUpperCase());
         girl.unlocked_codes = [...unlocked];
         this.saveToStorage();
 
@@ -560,11 +665,14 @@ export class AppDatabaseService {
       ? this.state.boys.filter((b) => b.group_id === activeGroup.id)
       : this.state.boys;
 
-    const unlockedCodes = new Set(girl?.unlocked_codes || []);
+    const unlockedCodes = new Set<string>([
+      ...(girl?.unlocked_codes || []).map((c) => c.toUpperCase()),
+      ...Array.from(this.sessionUnlockedCodes).map((c) => c.toUpperCase()),
+    ]);
+
     const isGlobalUnlocked = Boolean(
-      girl &&
       activeGroup &&
-      unlockedCodes.has(activeGroup.secret_code)
+      unlockedCodes.has(activeGroup.secret_code.toUpperCase())
     );
 
     return {
@@ -577,7 +685,7 @@ export class AppDatabaseService {
       isBoyUnlocked: (boy: Boy) => {
         if (isGlobalUnlocked) return true;
         if (!boy.secret_code) return isGlobalUnlocked;
-        return unlockedCodes.has(boy.secret_code.toUpperCase());
+        return unlockedCodes.has(boy.secret_code.trim().toUpperCase());
       },
       girl,
     };
@@ -711,13 +819,17 @@ export class AppDatabaseService {
   public setGirlUnlocked(token: string, secretCode: string, unlocked: boolean): boolean {
     const girl = this.getGirlByToken(token);
     if (!girl) return false;
+    const clean = secretCode.trim().toUpperCase();
     const current = new Set(girl.unlocked_codes || []);
     if (unlocked) {
-      current.add(secretCode.toUpperCase());
+      current.add(clean);
+      this.sessionUnlockedCodes.add(clean);
     } else {
-      current.delete(secretCode.toUpperCase());
+      current.delete(clean);
+      this.sessionUnlockedCodes.delete(clean);
     }
     girl.unlocked_codes = [...current];
+    this.saveSessionUnlockedCodes();
     this.saveToStorage();
 
     if (this.isUsingSupabase()) {
