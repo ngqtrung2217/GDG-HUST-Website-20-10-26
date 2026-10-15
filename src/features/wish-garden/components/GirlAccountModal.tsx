@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { dbService } from "@/services/app-database";
-import type { Girl, Group } from "@/types/database";
+import type { Girl } from "@/types/database";
 
 interface GirlAccountModalProps {
   isOpen: boolean;
@@ -16,7 +16,6 @@ export function GirlAccountModal({
 }: GirlAccountModalProps) {
   const groups = dbService.getState().groups;
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [groupId, setGroupId] = useState(groups[0]?.id || "");
   const [existingToken, setExistingToken] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(false);

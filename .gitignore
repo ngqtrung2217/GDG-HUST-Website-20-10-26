@@ -28,6 +28,13 @@ yarn-error.log*
 screenshots/*
 !screenshots/.gitkeep
 
+# Grok & Agent residue
+.grok/
+agent/
+agents
+artifacts/
+.node_modules.lock
+
 # Markdown documentation
 *.md
 **/*.md
