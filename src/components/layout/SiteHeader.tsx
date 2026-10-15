@@ -5,23 +5,21 @@ export function SiteHeader() {
   const currentPath = router.location.pathname;
 
   return (
-    <header className="fixed top-4 left-6 right-6 z-40 h-14 flex items-center justify-between px-6 rounded-full backdrop-blur-xl bg-[rgba(255,255,255,0.78)] border border-[rgba(255,255,255,0.85)] shadow-[0_16px_32px_-8px_rgba(136,73,90,0.12)]">
-      {/* Left: Branding */}
-      <Link to="/" className="flex items-center gap-3 no-underline group">
-        <span className="font-display text-lg tracking-tight text-[var(--text-primary)] font-semibold">
+    <header className="fixed top-3 sm:top-4 left-3 right-3 sm:left-6 sm:right-6 z-40 h-13 sm:h-14 flex items-center justify-between px-3.5 sm:px-6 rounded-full backdrop-blur-xl bg-[rgba(255,255,255,0.82)] border border-[rgba(255,255,255,0.9)] shadow-[0_12px_28px_-6px_rgba(136,73,90,0.12)]">
+      <Link to="/boy" className="flex items-center gap-1.5 sm:gap-2.5 no-underline group shrink-0">
+        <span className="font-display text-sm sm:text-lg tracking-tight text-[var(--text-primary)] font-semibold whitespace-nowrap">
           Bloom With Us
         </span>
-        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase border border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.12)] text-[#916b14]">
+        <span className="inline-flex items-center justify-center px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-wider uppercase border border-[rgba(212,175,55,0.5)] bg-[rgba(212,175,55,0.14)] text-[#916b14]">
           20/10
         </span>
       </Link>
 
-      {/* Right: Clean Text Navigation Tabs */}
-      <nav className="flex items-center gap-1 sm:gap-2 text-sm font-medium">
+      <nav className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium shrink-0">
         <Link
-          to="/"
-          className={`px-4 py-1.5 rounded-full transition-all no-underline ${
-            currentPath === "/" || currentPath === "/boy"
+          to="/boy"
+          className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full transition-all no-underline whitespace-nowrap ${
+            currentPath === "/boy"
               ? "bg-[#F7E6EC] text-[var(--accent-blush-hover)] font-semibold"
               : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/50"
           }`}
@@ -30,8 +28,8 @@ export function SiteHeader() {
         </Link>
         <Link
           to="/play"
-          className={`px-4 py-1.5 rounded-full transition-all no-underline ${
-            currentPath === "/play"
+          className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full transition-all no-underline whitespace-nowrap ${
+            currentPath === "/" || currentPath === "/play"
               ? "bg-[#F7E6EC] text-[var(--accent-blush-hover)] font-semibold"
               : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/50"
           }`}
@@ -40,7 +38,7 @@ export function SiteHeader() {
         </Link>
         <Link
           to="/dashboard"
-          className={`hidden sm:inline-block px-4 py-1.5 rounded-full transition-all no-underline ${
+          className={`hidden md:inline-block px-3 sm:px-4 py-1.5 rounded-full transition-all no-underline whitespace-nowrap ${
             currentPath === "/dashboard"
               ? "bg-[#F7E6EC] text-[var(--accent-blush-hover)] font-semibold"
               : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/50"

@@ -1,17 +1,17 @@
-/**
- * Lightweight, zero-dependency Supabase client for GDGoC HUST 20/10.
- * Connects directly to Supabase REST / PostgREST endpoints.
- * Gracefully falls back to local storage when credentials are not configured.
- */
-
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
 }
 
 function getSupabaseConfig(): SupabaseConfig {
-  const url = (import.meta.env.VITE_SUPABASE_URL || "").trim().replace(/\/+$/, "");
-  const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
+  const env: Record<string, string | undefined> =
+    typeof import.meta !== "undefined" && import.meta.env
+      ? import.meta.env
+      : typeof process !== "undefined"
+      ? (process.env as Record<string, string | undefined>)
+      : {};
+  const url = (env.VITE_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  const anonKey = (env.VITE_SUPABASE_ANON_KEY || "").trim();
   return { url, anonKey };
 }
 
@@ -39,9 +39,6 @@ export class SupabaseClient {
     };
   }
 
-  /**
-   * Fetch rows from a Supabase table.
-   */
   public async from<T>(table: string, queryParams: string = "select=*"): Promise<T[] | null> {
     if (!this.isConfigured()) return null;
 
@@ -62,9 +59,6 @@ export class SupabaseClient {
     }
   }
 
-  /**
-   * Insert a new row into a Supabase table.
-   */
   public async insert<T>(table: string, data: Partial<T>): Promise<T | null> {
     if (!this.isConfigured()) return null;
 
@@ -87,9 +81,6 @@ export class SupabaseClient {
     }
   }
 
-  /**
-   * Update rows matching a query in a Supabase table.
-   */
   public async update<T>(
     table: string,
     filterParam: string,
@@ -116,9 +107,6 @@ export class SupabaseClient {
     }
   }
 
-  /**
-   * Delete rows from a Supabase table.
-   */
   public async delete(table: string, filterParam: string): Promise<boolean> {
     if (!this.isConfigured()) return false;
 
@@ -137,4 +125,3 @@ export class SupabaseClient {
 }
 
 export const supabase = new SupabaseClient();
-

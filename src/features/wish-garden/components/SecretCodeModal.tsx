@@ -7,7 +7,7 @@ interface SecretCodeModalProps {
   isOpen: boolean;
   girlToken?: string;
   onClose: () => void;
-  onSuccessUnlock: (group: Group, boys: Boy[]) => void;
+  onSuccessUnlock: (group: Group, boys: Boy[], unlockedBoy?: Boy) => void;
 }
 
 export function SecretCodeModal({
@@ -23,16 +23,17 @@ export function SecretCodeModal({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) return;
+    const clean = code.trim().toUpperCase();
+    if (!clean) return;
 
-    const result = dbService.verifySecretCode(code.trim(), girlToken);
+    const result = dbService.verifySecretCode(clean, girlToken);
     if (!result.success || !result.group) {
       setError("Mã bí mật chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
       return;
     }
 
     setError("");
-    onSuccessUnlock(result.group, result.boys || []);
+    onSuccessUnlock(result.group, result.boys || [], result.unlockedBoy);
     onClose();
   }
 

@@ -22,21 +22,19 @@ const ORNAMENT_ICONS: Record<string, string> = {
   teddy: "🧸",
 };
 
-// 12 organically distributed coordinates along the natural curve of the bonsai boughs.
-// Slots 0, 1, 2, 3, 4 are primary focal boughs for 5 boys, balanced across left, center, right.
 const BRANCH_COORDINATES = [
-  { x: 26, y: 38 }, // Left Mid Bough
-  { x: 50, y: 22 }, // High Crown Peak
-  { x: 74, y: 38 }, // Right Mid Bough
-  { x: 38, y: 28 }, // Upper-Left Bough
-  { x: 62, y: 28 }, // Upper-Right Bough
-  { x: 18, y: 48 }, // Far-Left Low Hanging
-  { x: 82, y: 48 }, // Far-Right Low Hanging
-  { x: 50, y: 40 }, // Mid-Center Heart
-  { x: 32, y: 52 }, // Lower-Left Droop
-  { x: 68, y: 52 }, // Lower-Right Droop
-  { x: 44, y: 16 }, // Top-Left Spire
-  { x: 56, y: 16 }, // Top-Right Spire
+  { x: 26, y: 36 },
+  { x: 50, y: 17 },
+  { x: 74, y: 36 },
+  { x: 37, y: 25 },
+  { x: 63, y: 25 },
+  { x: 20, y: 46 },
+  { x: 80, y: 46 },
+  { x: 50, y: 33 },
+  { x: 30, y: 50 },
+  { x: 70, y: 50 },
+  { x: 43, y: 13 },
+  { x: 57, y: 13 },
 ];
 
 export function ViralTree2010({
@@ -74,14 +72,12 @@ export function ViralTree2010({
   }
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#FAF7F2] via-[#F6ECE9] to-[#F1DEE3] text-[#2C1820] overflow-x-hidden font-sans select-none pb-24">
-      {/* Background Atmosphere: Ambient Warm Light & Natural Petal Flutter */}
+    <div className="relative w-full min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#FAF7F2] via-[#F6ECE9] to-[#F1DEE3] text-[#2C1820] overflow-x-hidden font-sans select-none pb-28 pt-20 sm:pt-24">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[760px] h-[480px] bg-[#FCE8ED]/40 rounded-full blur-[140px]" />
         <div className="absolute top-1/3 left-10 w-96 h-96 bg-[#FAD2DC]/25 rounded-full blur-[120px]" />
         <div className="absolute top-1/3 right-10 w-96 h-96 bg-[#FDF0E6]/35 rounded-full blur-[120px]" />
 
-        {/* Fluttering Petals */}
         {[...Array(14)].map((_, i) => (
           <div
             key={i}
@@ -99,28 +95,26 @@ export function ViralTree2010({
         ))}
       </div>
 
-      {/* TOP SECTION: Clean, Poetic Header (Well below SiteHeader) */}
-      <div className="relative z-10 pt-24 sm:pt-28 px-6 max-w-4xl mx-auto w-full text-center">
-        <div className="inline-flex items-center gap-2 mb-2">
-          <span className="h-px w-6 bg-[#C5A059]/60" />
-          <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-[#826A73]">
+      <div className="relative z-10 px-4 max-w-2xl mx-auto w-full text-center">
+        <div className="inline-flex items-center gap-2 mb-1.5">
+          <span className="h-px w-5 sm:w-6 bg-[#C5A059]/60" />
+          <span className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-[#826A73]">
             {treeTitle || "GDGoC HUST"} · 20 Tháng 10
           </span>
-          <span className="h-px w-6 bg-[#C5A059]/60" />
+          <span className="h-px w-5 sm:w-6 bg-[#C5A059]/60" />
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-serif font-bold text-[#2C1820] tracking-tight">
+        <h1 className="text-2xl sm:text-4xl font-serif font-bold text-[#2C1820] tracking-tight">
           Cây Ước Nguyện
         </h1>
 
-        <p className="text-xs sm:text-sm text-[#826A73] mt-1.5 max-w-lg mx-auto font-sans leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#826A73] mt-1 max-w-md mx-auto leading-relaxed">
           {recipientName
             ? `Thương gửi đến bạn ${recipientName}`
-            : "Những lời chúc và món quà kỷ niệm 20/10 từ GDGoC HUST gửi tặng bạn"}
+            : "Những lời chúc và món quà kỷ niệm 20/10 gửi tặng bạn"}
         </p>
 
-        {/* Account indicator if needed */}
-        <div className="mt-2.5 flex items-center justify-center gap-3">
+        <div className="mt-1.5 flex items-center justify-center gap-3">
           <button
             type="button"
             onClick={onOpenGirlAccountModal}
@@ -131,141 +125,238 @@ export function ViralTree2010({
         </div>
       </div>
 
-      {/* CENTRAL BONSAI VIEWPORT: Handcrafted Botanical Bonsai */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-5xl mx-auto px-4 my-2">
-        <div className="relative w-full h-[460px] sm:h-[520px] md:h-[580px] max-h-[66vh]">
-          {/* Organic Bonsai Tree SVG */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto px-2 sm:px-4 my-auto">
+        <div className="relative w-full aspect-[1000/620] max-h-[62vh] mx-auto">
           <svg
-            viewBox="0 0 1000 640"
-            className="w-full h-full drop-shadow-[0_24px_48px_rgba(136,73,90,0.12)] select-none pointer-events-none"
+            viewBox="0 0 1000 620"
+            className="w-full h-full block drop-shadow-[0_20px_40px_rgba(136,73,90,0.12)] select-none pointer-events-none"
           >
             <defs>
-              {/* Natural Ink Bark Gradient */}
-              <linearGradient id="barkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#2E1C14" />
-                <stop offset="30%" stopColor="#4D2E20" />
-                <stop offset="70%" stopColor="#633C2A" />
-                <stop offset="100%" stopColor="#321D15" />
+              <linearGradient id="trunkBark" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#25140C" />
+                <stop offset="25%" stopColor="#3E2014" />
+                <stop offset="50%" stopColor="#542E1D" />
+                <stop offset="75%" stopColor="#3E2014" />
+                <stop offset="100%" stopColor="#20100A" />
               </linearGradient>
 
-              {/* Soft Watercolor Blossom Radiance */}
-              <radialGradient id="blossomSoft" cx="45%" cy="40%" r="65%">
-                <stop offset="0%" stopColor="#FFF8FA" />
-                <stop offset="60%" stopColor="#FAD4E0" />
-                <stop offset="100%" stopColor="#E27494" />
+              <linearGradient id="branchWood" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#5E3321" />
+                <stop offset="100%" stopColor="#30190F" />
+              </linearGradient>
+
+              <radialGradient id="blossomDeep" cx="45%" cy="40%" r="65%">
+                <stop offset="0%" stopColor="#FFA6C1" />
+                <stop offset="55%" stopColor="#DB597E" />
+                <stop offset="100%" stopColor="#A8284C" />
               </radialGradient>
-              <radialGradient id="blossomDeep" cx="35%" cy="35%" r="70%">
-                <stop offset="0%" stopColor="#FDE6ED" />
-                <stop offset="65%" stopColor="#EE96B1" />
-                <stop offset="100%" stopColor="#C2496E" />
+              <radialGradient id="blossomMid" cx="40%" cy="35%" r="65%">
+                <stop offset="0%" stopColor="#FFF2F6" />
+                <stop offset="50%" stopColor="#F9B3C7" />
+                <stop offset="100%" stopColor="#E26589" />
               </radialGradient>
-              <radialGradient id="blossomLight" cx="40%" cy="30%" r="60%">
+              <radialGradient id="blossomSoft" cx="35%" cy="30%" r="60%">
                 <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="50%" stopColor="#FFEAF1" />
-                <stop offset="100%" stopColor="#F7B2C6" />
+                <stop offset="55%" stopColor="#FEE4ED" />
+                <stop offset="100%" stopColor="#F59EBA" />
+              </radialGradient>
+              <radialGradient id="blossomAura" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(255, 230, 238, 0.6)" />
+                <stop offset="100%" stopColor="rgba(255, 230, 238, 0)" />
               </radialGradient>
 
-              {/* Subtle Hill Base */}
-              <linearGradient id="softHill" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#6B8E70" />
-                <stop offset="50%" stopColor="#537357" />
-                <stop offset="100%" stopColor="#3B543E" />
+              <linearGradient id="mossHill" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#5D8562" />
+                <stop offset="40%" stopColor="#446648" />
+                <stop offset="100%" stopColor="#263D2A" />
               </linearGradient>
+
+              <g id="flower-petal-cluster">
+                <circle cx="0" cy="-6" r="4.2" fill="#FFAEC5" opacity="0.95" />
+                <circle cx="5.7" cy="-1.8" r="4.2" fill="#FFAEC5" opacity="0.95" />
+                <circle cx="3.5" cy="4.8" r="4.2" fill="#FF9EBA" opacity="0.95" />
+                <circle cx="-3.5" cy="4.8" r="4.2" fill="#FF9EBA" opacity="0.95" />
+                <circle cx="-5.7" cy="-1.8" r="4.2" fill="#FFAEC5" opacity="0.95" />
+                <circle cx="0" cy="0" r="2" fill="#FFE899" />
+                <circle cx="0" cy="0" r="0.9" fill="#E67E22" />
+              </g>
+
+              <g id="leaf-duo">
+                <ellipse cx="-4" cy="-2" rx="7" ry="3.2" fill="#507F58" transform="rotate(-25 -4 -2)" />
+                <ellipse cx="4" cy="1" rx="6" ry="2.8" fill="#6A9A72" transform="rotate(20 4 1)" />
+              </g>
             </defs>
 
-            {/* Earth knoll */}
             <path
-              d="M -100 640 Q 250 560, 500 570 Q 750 580, 1100 550 L 1100 640 Z"
-              fill="url(#softHill)"
+              d="M -50 620 Q 220 540, 500 550 Q 780 560, 1050 535 L 1050 620 Z"
+              fill="url(#mossHill)"
+            />
+            <path
+              d="M 50 620 Q 320 555, 520 558 Q 740 562, 950 548"
+              stroke="#769E7A"
+              strokeWidth="2.5"
+              fill="none"
+              opacity="0.45"
             />
 
-            {/* Natural Gnarled Bonsai Trunk & Graceful Boughs */}
+            <ellipse cx="500" cy="220" rx="380" ry="160" fill="url(#blossomAura)" />
+
             <g>
-              {/* Base roots and trunk */}
               <path
-                d="M 450 580 C 460 520, 465 450, 455 390 C 445 330, 470 280, 490 250 L 515 250 C 530 280, 555 330, 545 390 C 535 450, 540 520, 550 580 Z"
-                fill="url(#barkGradient)"
-              />
-
-              {/* Left Sweeping Bough */}
-              <path
-                d="M 465 350 C 385 300, 275 270, 160 230 C 210 240, 310 260, 410 300 C 450 320, 470 340, 465 350 Z"
-                fill="url(#barkGradient)"
+                d="M 410 575 Q 460 550, 470 500 L 530 500 Q 540 550, 590 575 Q 545 565, 500 562 Q 455 565, 410 575 Z"
+                fill="url(#trunkBark)"
               />
               <path
-                d="M 290 260 Q 210 190, 150 160 Q 220 180, 300 230 Z"
-                fill="url(#barkGradient)"
-              />
-
-              {/* Upper-Left Limb */}
-              <path
-                d="M 480 290 C 430 230, 360 180, 280 120 C 330 150, 400 200, 460 250 Z"
-                fill="url(#barkGradient)"
-              />
-
-              {/* Central Upright Branch */}
-              <path
-                d="M 490 250 C 480 180, 450 140, 420 90 C 450 115, 485 160, 500 215 C 515 160, 550 115, 580 90 C 550 140, 520 180, 515 250 Z"
-                fill="url(#barkGradient)"
-              />
-
-              {/* Upper-Right Limb */}
-              <path
-                d="M 520 290 C 570 230, 640 180, 720 120 C 670 150, 600 200, 540 250 Z"
-                fill="url(#barkGradient)"
-              />
-
-              {/* Right Sweeping Bough */}
-              <path
-                d="M 535 350 C 615 300, 725 270, 840 230 C 790 240, 690 260, 590 300 C 550 320, 530 340, 535 350 Z"
-                fill="url(#barkGradient)"
+                d="M 465 510 C 475 440, 480 390, 465 340 C 450 290, 480 250, 492 230 L 512 230 C 525 250, 550 290, 535 340 C 520 390, 525 440, 535 510 Z"
+                fill="url(#trunkBark)"
               />
               <path
-                d="M 710 260 Q 790 190, 850 160 Q 780 180, 700 230 Z"
-                fill="url(#barkGradient)"
+                d="M 485 490 Q 480 430, 485 370 Q 492 320, 498 260"
+                stroke="#6E3D27"
+                strokeWidth="1.5"
+                fill="none"
+                opacity="0.55"
+              />
+              <path
+                d="M 515 480 Q 522 420, 516 360 Q 510 310, 506 260"
+                stroke="#331A0F"
+                strokeWidth="1.5"
+                fill="none"
+                opacity="0.6"
+              />
+              <path
+                d="M 470 340 C 390 305, 300 280, 190 240 C 230 250, 310 270, 400 300 C 440 315, 465 330, 470 340 Z"
+                fill="url(#branchWood)"
+              />
+              <path
+                d="M 330 285 Q 260 220, 190 190 Q 250 215, 335 260 Z"
+                fill="url(#branchWood)"
+              />
+              <path
+                d="M 475 280 C 430 225, 370 185, 300 135 C 340 160, 400 200, 455 245 Z"
+                fill="url(#branchWood)"
+              />
+              <path
+                d="M 530 340 C 610 305, 700 280, 810 240 C 770 250, 690 270, 600 300 C 560 315, 535 330, 530 340 Z"
+                fill="url(#branchWood)"
+              />
+              <path
+                d="M 670 285 Q 740 220, 810 190 Q 750 215, 665 260 Z"
+                fill="url(#branchWood)"
+              />
+              <path
+                d="M 525 280 C 570 225, 630 185, 700 135 C 660 160, 600 200, 545 245 Z"
+                fill="url(#branchWood)"
+              />
+              <path
+                d="M 495 230 C 485 170, 460 135, 435 95 C 460 115, 485 150, 500 200 C 515 150, 540 115, 565 95 C 540 135, 515 170, 505 230 Z"
+                fill="url(#branchWood)"
               />
             </g>
 
-            {/* Layered Blossom Canopies (Tán hoa mềm mại, không xếp hình tròn cứng) */}
-            <g opacity="0.94">
-              {/* Background Depth Clouds */}
-              <ellipse cx="240" cy="210" rx="130" ry="85" fill="url(#blossomDeep)" opacity="0.75" />
-              <ellipse cx="760" cy="210" rx="130" ry="85" fill="url(#blossomDeep)" opacity="0.75" />
-              <ellipse cx="500" cy="160" rx="150" ry="100" fill="url(#blossomDeep)" opacity="0.8" />
+            <g>
+              <g opacity="0.82">
+                <ellipse cx="230" cy="245" rx="105" ry="70" fill="url(#blossomDeep)" />
+                <ellipse cx="360" cy="195" rx="115" ry="78" fill="url(#blossomDeep)" />
+                <ellipse cx="500" cy="160" rx="135" ry="90" fill="url(#blossomDeep)" />
+                <ellipse cx="640" cy="195" rx="115" ry="78" fill="url(#blossomDeep)" />
+                <ellipse cx="770" cy="245" rx="105" ry="70" fill="url(#blossomDeep)" />
+                <ellipse cx="500" cy="230" rx="110" ry="70" fill="url(#blossomDeep)" />
+              </g>
 
-              {/* Midground Soft Petal Clouds */}
-              <circle cx="190" cy="230" r="90" fill="url(#blossomSoft)" />
-              <circle cx="310" cy="200" r="100" fill="url(#blossomSoft)" />
-              <circle cx="430" cy="150" r="105" fill="url(#blossomSoft)" />
-              <circle cx="570" cy="150" r="105" fill="url(#blossomSoft)" />
-              <circle cx="690" cy="200" r="100" fill="url(#blossomSoft)" />
-              <circle cx="810" cy="230" r="90" fill="url(#blossomSoft)" />
-              <circle cx="500" cy="220" r="110" fill="url(#blossomSoft)" />
+              <g opacity="0.94">
+                <ellipse cx="195" cy="240" rx="85" ry="62" fill="url(#blossomMid)" />
+                <ellipse cx="275" cy="210" rx="95" ry="70" fill="url(#blossomMid)" />
+                <ellipse cx="355" cy="165" rx="100" ry="72" fill="url(#blossomMid)" />
+                <ellipse cx="445" cy="130" rx="100" ry="72" fill="url(#blossomMid)" />
+                <ellipse cx="500" cy="115" rx="105" ry="78" fill="url(#blossomMid)" />
+                <ellipse cx="555" cy="130" rx="100" ry="72" fill="url(#blossomMid)" />
+                <ellipse cx="645" cy="165" rx="100" ry="72" fill="url(#blossomMid)" />
+                <ellipse cx="725" cy="210" rx="95" ry="70" fill="url(#blossomMid)" />
+                <ellipse cx="805" cy="240" rx="85" ry="62" fill="url(#blossomMid)" />
+                <ellipse cx="500" cy="205" rx="115" ry="75" fill="url(#blossomMid)" />
+              </g>
 
-              {/* High Blossom Highlights */}
-              <circle cx="370" cy="130" r="75" fill="url(#blossomLight)" opacity="0.9" />
-              <circle cx="500" cy="100" r="80" fill="url(#blossomLight)" opacity="0.95" />
-              <circle cx="630" cy="130" r="75" fill="url(#blossomLight)" opacity="0.9" />
+              <g opacity="0.96">
+                <ellipse cx="370" cy="140" rx="72" ry="52" fill="url(#blossomSoft)" />
+                <ellipse cx="500" cy="98" rx="80" ry="58" fill="url(#blossomSoft)" />
+                <ellipse cx="630" cy="140" rx="72" ry="52" fill="url(#blossomSoft)" />
+                <ellipse cx="270" cy="190" rx="65" ry="48" fill="url(#blossomSoft)" />
+                <ellipse cx="730" cy="190" rx="65" ry="48" fill="url(#blossomSoft)" />
+                <ellipse cx="500" cy="180" rx="85" ry="55" fill="url(#blossomSoft)" />
+              </g>
 
-              {/* Delicate Botanical Leaves */}
               {[
-                [130, 220], [220, 140], [340, 80], [500, 45], [660, 80], [780, 140], [870, 220]
-              ].map(([lx, ly], idx) => (
-                <ellipse
-                  key={`botanical-leaf-${idx}`}
-                  cx={lx}
-                  cy={ly}
-                  rx="12"
-                  ry="6"
-                  fill="#5A8F65"
-                  opacity="0.85"
-                  transform={`rotate(${idx * 30} ${lx} ${ly})`}
+                { x: 140, y: 220, rot: -20 },
+                { x: 220, y: 155, rot: 15 },
+                { x: 320, y: 110, rot: -35 },
+                { x: 420, y: 70, rot: -10 },
+                { x: 580, y: 70, rot: 15 },
+                { x: 680, y: 110, rot: 30 },
+                { x: 780, y: 155, rot: -20 },
+                { x: 860, y: 220, rot: 25 },
+                { x: 300, y: 260, rot: 40 },
+                { x: 700, y: 260, rot: -35 },
+              ].map((leaf, idx) => (
+                <use
+                  key={`leaf-accent-${idx}`}
+                  href="#leaf-duo"
+                  x={leaf.x}
+                  y={leaf.y}
+                  transform={`rotate(${leaf.rot} ${leaf.x} ${leaf.y})`}
+                  opacity="0.9"
+                />
+              ))}
+
+              {[
+                { x: 190, y: 215, s: 1.1 },
+                { x: 250, y: 170, s: 1.2 },
+                { x: 330, y: 135, s: 1.25 },
+                { x: 420, y: 95, s: 1.3 },
+                { x: 500, y: 70, s: 1.35 },
+                { x: 580, y: 95, s: 1.3 },
+                { x: 670, y: 135, s: 1.25 },
+                { x: 750, y: 170, s: 1.2 },
+                { x: 810, y: 215, s: 1.1 },
+                { x: 280, y: 240, s: 1.15 },
+                { x: 380, y: 200, s: 1.2 },
+                { x: 500, y: 150, s: 1.3 },
+                { x: 620, y: 200, s: 1.2 },
+                { x: 720, y: 240, s: 1.15 },
+                { x: 450, y: 240, s: 1.1 },
+                { x: 550, y: 240, s: 1.1 },
+              ].map((fl, idx) => (
+                <use
+                  key={`blossom-accent-${idx}`}
+                  href="#flower-petal-cluster"
+                  x={fl.x}
+                  y={fl.y}
+                  transform={`scale(${fl.s})`}
+                  style={{ transformOrigin: `${fl.x}px ${fl.y}px` }}
+                />
+              ))}
+
+              {[
+                { x: 130, y: 270, r: 25 },
+                { x: 210, y: 290, r: -40 },
+                { x: 340, y: 270, r: 60 },
+                { x: 660, y: 270, r: -30 },
+                { x: 790, y: 290, r: 45 },
+                { x: 870, y: 270, r: -15 },
+              ].map((pt, idx) => (
+                <circle
+                  key={`float-petal-${idx}`}
+                  cx={pt.x}
+                  cy={pt.y}
+                  r="4"
+                  fill="#FFAEC5"
+                  opacity="0.8"
+                  transform={`rotate(${pt.r} ${pt.x} ${pt.y})`}
                 />
               ))}
             </g>
           </svg>
 
-          {/* HANGING WISHING PLAQUES (Ema-inspired Japanese/Vietnamese wish tags) */}
           {currentBoys.map((boy, idx) => {
             const coord = BRANCH_COORDINATES[idx % BRANCH_COORDINATES.length];
             const unlocked = isBoyUnlocked ? isBoyUnlocked(boy) : isUnlocked;
@@ -275,44 +366,42 @@ export function ViralTree2010({
                 key={boy.id}
                 onClick={() => onSelectBoy(boy)}
                 style={{ top: `${coord.y}%`, left: `${coord.x}%` }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer group transition-transform duration-300 hover:scale-115 hover:-rotate-2 z-20"
+                className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer group transition-transform duration-300 hover:scale-110 active:scale-95 z-20 touch-manipulation"
               >
-                {/* Slender Vertical Silk Cord */}
-                <div className="w-[1px] h-6 bg-[#C5A059] shadow-sm -mb-0.5" />
+                <div className="w-[1px] h-3.5 sm:h-5 bg-gradient-to-b from-[#C5A059] to-[#916B14] shadow-xs -mb-0.5" />
 
-                {/* Minimalist Birchwood Wish Plaque with chosen gift displayed */}
-                <div className="relative flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#E8D7DC] shadow-[0_8px_20px_-4px_rgba(136,73,90,0.14)] group-hover:border-[#E06D88] group-hover:shadow-[0_12px_28px_-4px_rgba(224,109,136,0.3)] transition-all">
-                  {/* The Gift Displayed on the Tree */}
-                  <span className="shrink-0 flex items-center justify-center size-5 rounded-full bg-[#FAF0EE] border border-[#F0D5DA] text-xs">
+                <div className="relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#FFFDF9]/95 backdrop-blur-xs border border-[#E8D7DC] shadow-[0_4px_16px_-2px_rgba(136,73,90,0.14)] group-hover:border-[#E06D88] group-hover:shadow-[0_8px_24px_-3px_rgba(224,109,136,0.3)] transition-all">
+                  <span className="shrink-0 flex items-center justify-center size-4 sm:size-5 rounded-full bg-[#FAF0EE] border border-[#F0D5DA] text-[10px] sm:text-xs">
                     {giftIcon}
                   </span>
 
-                  {/* Boy Name in Crisp Typography */}
-                  <span className="text-xs font-serif font-semibold text-[#2C1820] tracking-tight whitespace-nowrap">
+                  <span className="text-[10px] sm:text-xs font-serif font-semibold text-[#2C1820] tracking-tight whitespace-nowrap max-w-[62px] sm:max-w-none truncate">
                     {boy.name}
                   </span>
 
-                  {/* Lock/Unlock status indicator */}
-                  <span className={`size-1.5 rounded-full ${unlocked ? "bg-emerald-500" : "bg-[#C25953]"}`} />
+                  <span
+                    className={`size-1.5 rounded-full shrink-0 ${
+                      unlocked ? "bg-emerald-500 shadow-[0_0_6px_#10B981]" : "bg-[#C25953]"
+                    }`}
+                  />
                 </div>
               </div>
             );
           })}
 
-          {/* Empty state when tree has no letters yet */}
           {boys.length === 0 && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center p-6 rounded-3xl bg-white/85 backdrop-blur-md border border-[#E8D7DC] shadow-xl text-center max-w-[280px] pointer-events-auto animate-fade-in">
-              <span className="text-3xl mb-1.5">🌸</span>
-              <h3 className="text-sm font-serif font-bold text-[#2C1820]">
+            <div className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-md border border-[#F0D5DA] shadow-xl text-center max-w-[240px] sm:max-w-[280px] pointer-events-auto animate-fade-in">
+              <span className="text-2xl sm:text-3xl mb-1">🌸</span>
+              <h3 className="text-xs sm:text-sm font-serif font-bold text-[#2C1820]">
                 Cây Đang Chờ Lời Chúc
               </h3>
-              <p className="text-[11px] text-[#826A73] mt-1 leading-relaxed">
-                Chưa có bức thư nào được treo. Các bạn nam hãy bấm bên dưới để gửi gắm lời chúc đầu tiên nhé!
+              <p className="text-[10px] sm:text-[11px] text-[#826A73] mt-0.5 leading-relaxed">
+                Chưa có bức thư nào được treo. Các bạn nam hãy gửi gắm lời chúc đầu tiên nhé!
               </p>
               <button
                 type="button"
                 onClick={onOpenBoyLoginModal}
-                className="mt-3.5 px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white text-xs font-semibold shadow-md shadow-pink-500/20 cursor-pointer transition-all active:scale-95"
+                className="mt-2.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white text-[11px] sm:text-xs font-semibold shadow-md shadow-pink-500/20 cursor-pointer transition-all active:scale-95"
               >
                 Gửi lời chúc ngay ✨
               </button>
@@ -320,7 +409,6 @@ export function ViralTree2010({
           )}
         </div>
 
-        {/* Multi-page Navigation if > 12 gifts */}
         {totalPages > 1 && (
           <div className="flex items-center gap-3 mt-2 z-20">
             <button
@@ -346,30 +434,28 @@ export function ViralTree2010({
         )}
       </div>
 
-      {/* BOTTOM ACTION DOCK (Clean, Unified Glassmorphic Pill) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 max-w-[94vw] w-full sm:w-auto">
+      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 sm:gap-2 max-w-[95vw] w-full sm:w-auto px-2">
         <form
           onSubmit={handleQuickSubmit}
-          className="flex items-center w-full sm:w-[460px] h-13 px-2 py-1.5 rounded-full backdrop-blur-xl bg-white/85 border border-white/90 shadow-[0_16px_36px_-8px_rgba(136,73,90,0.18)]"
+          className="flex items-center w-full sm:w-[440px] h-11 sm:h-13 px-2 py-1 rounded-full backdrop-blur-xl bg-white/90 border border-white/95 shadow-[0_12px_32px_-6px_rgba(136,73,90,0.2)]"
         >
           <input
             type="text"
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-            placeholder="Nhập mã bí mật nhận quà (VD: 2010)..."
-            className="flex-1 h-full px-4 bg-transparent text-xs sm:text-sm text-[#2C1820] placeholder:text-[#826A73]/60 focus:outline-none font-mono uppercase tracking-wider"
+            placeholder="Nhập mã mở quà (VD: 2010)..."
+            className="flex-1 h-full px-3 sm:px-4 bg-transparent text-xs sm:text-sm text-[#2C1820] placeholder:text-[#826A73]/60 focus:outline-none font-mono uppercase tracking-wider min-w-0"
           />
 
           <button
             type="submit"
-            className="h-10 px-5 rounded-full bg-gradient-to-r from-[#E06D88] to-[#CC5572] hover:from-[#CC5572] hover:to-[#B83E5D] text-white text-xs font-semibold shadow-md shadow-pink-900/15 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+            className="h-8 sm:h-10 px-3.5 sm:px-5 rounded-full bg-gradient-to-r from-[#E06D88] to-[#CC5572] hover:from-[#CC5572] hover:to-[#B83E5D] text-white text-[11px] sm:text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
           >
             Mở Lời Chúc
           </button>
         </form>
 
-        {/* Discreet link for boys to compose wish */}
-        <div className="flex items-center gap-4 text-[11px] text-[#826A73]">
+        <div className="flex items-center gap-2.5 sm:gap-4 text-[10px] sm:text-[11px] text-[#826A73]">
           <button
             type="button"
             onClick={onOpenBoyLoginModal}

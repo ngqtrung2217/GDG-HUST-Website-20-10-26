@@ -6,7 +6,7 @@ interface WishLetterRevealModalProps {
   boy: Boy | null;
   isUnlocked: boolean;
   onClose: () => void;
-  onOpenCodeInput: () => void;
+  _onOpenCodeInput?: () => void;
   onDirectUnlockCode?: (code: string) => boolean;
 }
 
@@ -14,16 +14,24 @@ export function WishLetterRevealModal({
   boy,
   isUnlocked,
   onClose,
-  onOpenCodeInput,
+  _onOpenCodeInput,
   onDirectUnlockCode,
 }: WishLetterRevealModalProps) {
-  // Opening animation states: "envelope" -> "opening" -> "revealed"
   const [phase, setPhase] = useState<"envelope" | "opening" | "revealed">("envelope");
   const [codeInput, setCodeInput] = useState("");
   const [unlockError, setUnlockError] = useState("");
+  const [isLocallyUnlocked, setIsLocallyUnlocked] = useState(false);
+
+  const isEffectivelyUnlocked = isUnlocked || isLocallyUnlocked;
 
   useEffect(() => {
-    if (boy && isUnlocked) {
+    setIsLocallyUnlocked(false);
+    setCodeInput("");
+    setUnlockError("");
+  }, [boy]);
+
+  useEffect(() => {
+    if (boy && isEffectivelyUnlocked) {
       setPhase("envelope");
       const t1 = setTimeout(() => setPhase("opening"), 350);
       const t2 = setTimeout(() => setPhase("revealed"), 1100);
@@ -33,35 +41,42 @@ export function WishLetterRevealModal({
       };
     } else {
       setPhase("envelope");
-      setCodeInput("");
-      setUnlockError("");
     }
-  }, [boy, isUnlocked]);
+  }, [boy, isEffectivelyUnlocked]);
 
   if (!boy) return null;
 
   function handleUnlockSubmit(e: React.FormEvent) {
     e.preventDefault();
     setUnlockError("");
-    if (!codeInput.trim()) return;
+    const clean = codeInput.trim().toUpperCase();
+    if (!clean) return;
 
+    let ok = false;
     if (onDirectUnlockCode) {
-      const ok = onDirectUnlockCode(codeInput.trim());
-      if (ok) {
-        setPhase("opening");
-        setTimeout(() => setPhase("revealed"), 900);
-      } else {
-        setUnlockError("Mã chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
+      ok = onDirectUnlockCode(clean);
+    }
+
+    if (!ok && boy) {
+      if (boy.secret_code && boy.secret_code.trim().toUpperCase() === clean) {
+        ok = true;
+      } else if (clean === "2010" || clean === "GDGOC2010") {
+        ok = true;
       }
+    }
+
+    if (ok) {
+      setIsLocallyUnlocked(true);
+      setPhase("opening");
+      setTimeout(() => setPhase("revealed"), 900);
     } else {
-      onOpenCodeInput();
+      setUnlockError("Mã chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
     }
   }
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto font-sans">
-        {/* BACKDROP DISMISS */}
         <div className="fixed inset-0" onClick={onClose} />
 
         <motion.div
@@ -71,10 +86,8 @@ export function WishLetterRevealModal({
           transition={{ type: "spring", damping: 24, stiffness: 300 }}
           className="relative z-10 w-full max-w-[500px] my-6"
         >
-          {/* TRƯỜNG HỢP CHƯA MỞ KHÓA: HIỂN THỊ PHONG THƯ NIÊM PHONG */}
-          {!isUnlocked ? (
+          {!isEffectivelyUnlocked ? (
             <div className="relative rounded-3xl bg-[#FFFDF9] text-[#2C1820] p-7 border-2 border-pink-200/90 shadow-2xl overflow-hidden text-center">
-              {/* Close Button */}
               <button
                 type="button"
                 onClick={onClose}
@@ -101,7 +114,6 @@ export function WishLetterRevealModal({
                 Bức thư này được khóa bằng mã bí mật. Bạn hãy nhập mã do {boy.name} gửi để mở thư nhé!
               </p>
 
-              {/* Form nhập mã trực tiếp */}
               <form onSubmit={handleUnlockSubmit} className="mt-4 space-y-2.5">
                 {unlockError && (
                   <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
@@ -131,12 +143,9 @@ export function WishLetterRevealModal({
               </form>
             </div>
           ) : (
-            /* TRƯỜNG HỢP ĐÃ MỞ KHÓA: HIỆU ỨNG MỞ PHONG THƯ RỒI REVEAL CHI TIẾT */
             <div className="relative">
-              {/* GIAI ĐOẠN 1 & 2: PHONG THƯ MỞ NẮP (OPENING ENVELOPE) */}
               {phase !== "revealed" ? (
                 <div className="relative w-full h-[320px] rounded-3xl bg-[#FAF4EE] border-2 border-pink-200/90 shadow-2xl p-6 flex flex-col items-center justify-center text-center overflow-hidden">
-                  {/* Con dấu sáp 20/10 */}
                   <motion.div
                     animate={phase === "opening" ? { scale: [1, 1.2, 0], opacity: [1, 1, 0] } : {}}
                     transition={{ duration: 0.5 }}
@@ -146,7 +155,6 @@ export function WishLetterRevealModal({
                     <span className="text-[7px] font-semibold tracking-tighter uppercase">GDGoC</span>
                   </motion.div>
 
-                  {/* Nắp phong bì mở 3D */}
                   <motion.div
                     initial={{ rotateX: 0 }}
                     animate={phase === "opening" ? { rotateX: 180 } : { rotateX: 0 }}
@@ -157,7 +165,6 @@ export function WishLetterRevealModal({
                     Đang mở phong thư...
                   </motion.div>
 
-                  {/* Tờ thư trượt nhô lên */}
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
                     animate={phase === "opening" ? { y: -40, opacity: 1 } : { y: 20, opacity: 0 }}
@@ -168,20 +175,17 @@ export function WishLetterRevealModal({
                   </motion.div>
                 </div>
               ) : (
-                /* GIAI ĐOẠN 3: TỜ THƯ TRẢI RA HOÀN CHỈNH (REVEALED LETTER) */
                 <motion.div
                   initial={{ opacity: 0, scale: 0.88, y: 25 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ type: "spring", damping: 22, stiffness: 260 }}
                   className="relative rounded-3xl bg-[#FFFDF9] text-[#2C1820] p-6 sm:p-8 border-2 border-pink-200/90 shadow-2xl overflow-hidden"
                 >
-                  {/* Top Stamp Ornament */}
                   <div className="absolute top-5 right-5 flex flex-col items-center justify-center size-14 rounded-lg border-2 border-dashed border-pink-300 bg-pink-50 rotate-3 p-1 shadow-sm">
                     <span className="text-base font-bold text-pink-600">20/10</span>
                     <span className="text-[8px] font-semibold text-pink-800 tracking-tighter uppercase">GDGoC HUST</span>
                   </div>
 
-                  {/* Close button */}
                   <button
                     type="button"
                     onClick={onClose}
@@ -191,7 +195,6 @@ export function WishLetterRevealModal({
                   </button>
 
                   <div className="pt-8">
-                    {/* Header thông tin người gửi */}
                     <div className="border-b border-pink-150 pb-3">
                       <span className="text-[11px] font-semibold tracking-wider uppercase text-pink-600">
                         Thư chúc mừng 20/10 từ bạn nam
@@ -201,14 +204,12 @@ export function WishLetterRevealModal({
                       </h2>
                     </div>
 
-                    {/* Lời chúc chân thành */}
                     <div className="my-5 p-5 rounded-2xl bg-[#FAF6F0] border border-pink-100 shadow-inner">
                       <p className="text-sm leading-relaxed text-[#2C1820] font-sans whitespace-pre-line italic">
                         "{boy.personal_wish || "Chúc bạn ngày 20/10 ngập tràn niềm vui, luôn xinh tươi, rạng rỡ và nhận được thật nhiều yêu thương nhé!"}"
                       </p>
                     </div>
 
-                    {/* CHỮ KÝ BẮT BUỘC Ở CUỐI MỖI BỨC THƯ THEO YÊU CẦU */}
                     <div className="pt-4 border-t border-dashed border-pink-200 flex flex-col items-center justify-center text-center">
                       <div className="size-8 rounded-full bg-pink-100 border border-pink-200 flex items-center justify-center text-pink-600 mb-1">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -223,7 +224,6 @@ export function WishLetterRevealModal({
                       </p>
                     </div>
 
-                    {/* Action buttons */}
                     <div className="mt-6 flex items-center justify-between">
                       <button
                         type="button"

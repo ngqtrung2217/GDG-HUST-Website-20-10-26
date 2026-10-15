@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test src/features/quiz/services/quiz-domain.test.ts src/features/wish-garden/services/wish-domain.test.ts",
+    "test": "node --experimental-strip-types --test src/services/app-database.test.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

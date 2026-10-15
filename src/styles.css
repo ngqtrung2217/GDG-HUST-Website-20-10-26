@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  /* Vietnamese Women's Day 20/10 Warm Garden Palette */
   --bg-gradient-top: #FFF9F5;
   --bg-gradient-mid: #FDECEF;
   --bg-gradient-bottom: #F7D6DF;
@@ -9,12 +8,10 @@
   --hill-base: #527958;
   --hill-highlight: #749D79;
 
-  /* Surfaces & Glass */
   --glass-bg: rgba(255, 255, 255, 0.82);
   --glass-border: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 16px 32px -8px rgba(184, 92, 117, 0.14);
 
-  /* Typography & Accents */
   --text-primary: #381A2B;
   --text-muted: #8A6878;
   --accent-blush: #E06085;
@@ -22,7 +19,6 @@
   --accent-gold: #D4AF37;
   --accent-rose: #D94B76;
   
-  /* Radii & Timing */
   --radius-dock: 9999px;
   --radius-card: 24px;
   --spring-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -64,7 +60,6 @@
   }
 }
 
-/* 20/10 Gentle Wind Sway */
 @keyframes floralSway {
   0%, 100% {
     transform: rotate(0deg);
@@ -82,7 +77,6 @@
   animation: floralSway 5s ease-in-out infinite;
 }
 
-/* Falling Peach & Rose Petals */
 @keyframes petalFallGentle {
   0% {
     transform: translate(0, -10px) rotate(0deg);
