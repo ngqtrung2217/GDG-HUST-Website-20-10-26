@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
+  base: process.env.VITE_BASE_PATH || (process.env.GITHUB_ACTIONS ? "/GDG-HUST-Website-20-10-26/" : "/"),
   plugins: [
     tanstackRouter({
       target: "react",

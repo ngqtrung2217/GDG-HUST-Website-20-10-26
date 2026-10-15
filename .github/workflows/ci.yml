@@ -3,7 +3,7 @@ name: Frontend CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, eoleun]
 
 jobs:
   verify:
@@ -12,9 +12,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm install --legacy-peer-deps
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

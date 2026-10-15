@@ -15,3 +15,4 @@ if (rootElement && !rootElement.innerHTML) {
     </React.StrictMode>
   );
 }
+
