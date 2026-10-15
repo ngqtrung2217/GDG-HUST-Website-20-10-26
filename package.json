@@ -1,23 +1,15 @@
 {
-  "name": "app-builder-workspace",
+  "name": "gdg-hust-website-20-10",
   "private": true,
   "sideEffects": false,
   "type": "module",
-  "overrides": {
-    "nf3": "0.3.17"
-  },
   "scripts": {
-    "dev": "node scripts/with-app-env.mjs vite dev --host 0.0.0.0 --port 8080",
-    "build": "node scripts/with-app-env.mjs vite build && npm run db:migrate",
-    "db:migrate": "node scripts/migrate.mjs",
-    "build:dev": "node scripts/with-app-env.mjs vite build --mode development",
-    "preview": "node scripts/with-app-env.mjs vite preview",
-    "preview:restart": "node scripts/preview.mjs restart",
-    "preview:stop": "node scripts/preview.mjs stop",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "check:auth": "node scripts/check-auth-invariant.mjs",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/app-data/readiness-schedule.test.ts src/lib/auth/gate-identity.test.ts src/lib/auth/sign-in-gate.test.ts src/lib/preview-path-prefix.test.ts src/features/quiz/services/quiz-domain.test.ts src/features/wish-garden/services/wish-domain.test.ts",
     "lint": "eslint .",
+    "test": "node --experimental-strip-types --test src/features/quiz/services/quiz-domain.test.ts src/features/wish-garden/services/wish-domain.test.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

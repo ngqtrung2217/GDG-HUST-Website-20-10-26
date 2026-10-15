@@ -21,18 +21,16 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 .tmp/
-.grok/*.log
-.grok/*.pid
-
-# QA screenshots & outputs
-screenshots/*
-!screenshots/.gitkeep
 
 # Grok & Agent residue
 .grok/
 agent/
 agents
 artifacts/
+screenshots/
+scripts/
+server/
+startup.sh
 .node_modules.lock
 
 # Markdown documentation
