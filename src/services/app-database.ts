@@ -1,5 +1,5 @@
-import type { Group, Boy, Girl, Question, OptionKey, OrnamentType } from "@/types/database";
-import { supabase } from "@/services/supabase";
+import type { Group, Boy, Girl, Question, OptionKey, OrnamentType } from "../types/database.ts";
+import { supabase } from "./supabase.ts";
 
 export interface DatabaseState {
   groups: Group[];
@@ -183,9 +183,6 @@ export class AppDatabaseService {
     localStorage.setItem(this.storageKey, JSON.stringify(this.state));
   }
 
-  /**
-   * Đồng bộ dữ liệu 2 chiều từ Supabase nếu có cấu hình
-   */
   public async syncFromSupabase(): Promise<boolean> {
     if (!this.enableSupabase || !supabase.isConfigured()) return false;
 
@@ -445,7 +442,6 @@ export class AppDatabaseService {
       return { success: false, message: "Vui lòng nhập lời chúc gửi bạn nữ nhé!" };
     }
 
-    // Match group by access code or secret code, or fallback to first group if GDGOC2010 / 2010
     let group = this.state.groups.find(
       (g) =>
         g.group_access_code.toUpperCase() === cleanCode ||
@@ -461,7 +457,6 @@ export class AppDatabaseService {
       };
     }
 
-    // Check if a boy with this name already exists in this group (case-insensitive)
     let boy = this.state.boys.find(
       (b) =>
         b.group_id === group!.id &&
@@ -757,11 +752,6 @@ export class AppDatabaseService {
   }
 }
 
-/**
- * Main production service:
- * Integrates with Supabase backend when VITE_SUPABASE_URL is configured,
- * with resilient persistent fallback.
- */
 export const dbService = new AppDatabaseService({
   storageKey: "bloom_2010_database_main",
   enableSupabase: true,

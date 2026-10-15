@@ -24,7 +24,7 @@ export interface Boy {
   name: string;
   email?: string;
   secret_code?: string;
-  description: string; // Manh mối đặc điểm nhận dạng cho minigame
+  description: string;
   personal_wish: string;
   ornament_type: OrnamentType;
   gift_hint?: string;
@@ -58,6 +58,6 @@ export interface Question {
     label: string;
   }[];
   correct_key: OptionKey;
-  clue: string; // Manh mối về bạn nam
+  clue: string;
 }
 

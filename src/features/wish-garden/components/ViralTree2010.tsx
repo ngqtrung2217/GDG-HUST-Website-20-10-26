@@ -22,21 +22,19 @@ const ORNAMENT_ICONS: Record<string, string> = {
   teddy: "🧸",
 };
 
-// 12 organically distributed coordinates along the natural curve of the bonsai boughs.
-// Strictly locked within 20% - 80% horizontal range so plaques never clip on mobile or zoom.
 const BRANCH_COORDINATES = [
-  { x: 26, y: 36 }, // Left Mid Bough
-  { x: 50, y: 17 }, // High Crown Peak
-  { x: 74, y: 36 }, // Right Mid Bough
-  { x: 37, y: 25 }, // Upper-Left Bough
-  { x: 63, y: 25 }, // Upper-Right Bough
-  { x: 20, y: 46 }, // Far-Left Low Hanging
-  { x: 80, y: 46 }, // Far-Right Low Hanging
-  { x: 50, y: 33 }, // Mid-Center Heart
-  { x: 30, y: 50 }, // Lower-Left Droop
-  { x: 70, y: 50 }, // Lower-Right Droop
-  { x: 43, y: 13 }, // Top-Left Spire
-  { x: 57, y: 13 }, // Top-Right Spire
+  { x: 26, y: 36 },
+  { x: 50, y: 17 },
+  { x: 74, y: 36 },
+  { x: 37, y: 25 },
+  { x: 63, y: 25 },
+  { x: 20, y: 46 },
+  { x: 80, y: 46 },
+  { x: 50, y: 33 },
+  { x: 30, y: 50 },
+  { x: 70, y: 50 },
+  { x: 43, y: 13 },
+  { x: 57, y: 13 },
 ];
 
 export function ViralTree2010({
@@ -75,13 +73,11 @@ export function ViralTree2010({
 
   return (
     <div className="relative w-full min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#FAF7F2] via-[#F6ECE9] to-[#F1DEE3] text-[#2C1820] overflow-x-hidden font-sans select-none pb-28 pt-20 sm:pt-24">
-      {/* Background Atmosphere: Ambient Warm Light & Natural Petal Flutter */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[760px] h-[480px] bg-[#FCE8ED]/40 rounded-full blur-[140px]" />
         <div className="absolute top-1/3 left-10 w-96 h-96 bg-[#FAD2DC]/25 rounded-full blur-[120px]" />
         <div className="absolute top-1/3 right-10 w-96 h-96 bg-[#FDF0E6]/35 rounded-full blur-[120px]" />
 
-        {/* Fluttering Petals in the breeze */}
         {[...Array(14)].map((_, i) => (
           <div
             key={i}
@@ -99,7 +95,6 @@ export function ViralTree2010({
         ))}
       </div>
 
-      {/* TOP SECTION: Poetic Header */}
       <div className="relative z-10 px-4 max-w-2xl mx-auto w-full text-center">
         <div className="inline-flex items-center gap-2 mb-1.5">
           <span className="h-px w-5 sm:w-6 bg-[#C5A059]/60" />
@@ -119,7 +114,6 @@ export function ViralTree2010({
             : "Những lời chúc và món quà kỷ niệm 20/10 gửi tặng bạn"}
         </p>
 
-        {/* Account indicator */}
         <div className="mt-1.5 flex items-center justify-center gap-3">
           <button
             type="button"
@@ -131,16 +125,13 @@ export function ViralTree2010({
         </div>
       </div>
 
-      {/* CENTRAL BONSAI VIEWPORT: Locked 1000:620 Aspect Ratio Canvas */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto px-2 sm:px-4 my-auto">
         <div className="relative w-full aspect-[1000/620] max-h-[62vh] mx-auto">
-          {/* Handcrafted Botanical Vietnamese Peach Blossom Bonsai SVG */}
           <svg
             viewBox="0 0 1000 620"
             className="w-full h-full block drop-shadow-[0_20px_40px_rgba(136,73,90,0.12)] select-none pointer-events-none"
           >
             <defs>
-              {/* Natural Gnarled Wood Trunk Gradient */}
               <linearGradient id="trunkBark" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#25140C" />
                 <stop offset="25%" stopColor="#3E2014" />
@@ -149,13 +140,11 @@ export function ViralTree2010({
                 <stop offset="100%" stopColor="#20100A" />
               </linearGradient>
 
-              {/* Branch highlight gradient */}
               <linearGradient id="branchWood" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#5E3321" />
                 <stop offset="100%" stopColor="#30190F" />
               </linearGradient>
 
-              {/* Botanical Peach Blossom Gradients */}
               <radialGradient id="blossomDeep" cx="45%" cy="40%" r="65%">
                 <stop offset="0%" stopColor="#FFA6C1" />
                 <stop offset="55%" stopColor="#DB597E" />
@@ -176,14 +165,12 @@ export function ViralTree2010({
                 <stop offset="100%" stopColor="rgba(255, 230, 238, 0)" />
               </radialGradient>
 
-              {/* Rolling Earthen Hill Gradient */}
               <linearGradient id="mossHill" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#5D8562" />
                 <stop offset="40%" stopColor="#446648" />
                 <stop offset="100%" stopColor="#263D2A" />
               </linearGradient>
 
-              {/* 5-Petal Peach Blossom Symbol */}
               <g id="flower-petal-cluster">
                 <circle cx="0" cy="-6" r="4.2" fill="#FFAEC5" opacity="0.95" />
                 <circle cx="5.7" cy="-1.8" r="4.2" fill="#FFAEC5" opacity="0.95" />
@@ -194,14 +181,12 @@ export function ViralTree2010({
                 <circle cx="0" cy="0" r="0.9" fill="#E67E22" />
               </g>
 
-              {/* Slender Leaf Duo */}
               <g id="leaf-duo">
                 <ellipse cx="-4" cy="-2" rx="7" ry="3.2" fill="#507F58" transform="rotate(-25 -4 -2)" />
                 <ellipse cx="4" cy="1" rx="6" ry="2.8" fill="#6A9A72" transform="rotate(20 4 1)" />
               </g>
             </defs>
 
-            {/* Lush Rolling Earthen Knoll Base */}
             <path
               d="M -50 620 Q 220 540, 500 550 Q 780 560, 1050 535 L 1050 620 Z"
               fill="url(#mossHill)"
@@ -214,24 +199,17 @@ export function ViralTree2010({
               opacity="0.45"
             />
 
-            {/* Ambient Blossom Glow Behind Tree */}
             <ellipse cx="500" cy="220" rx="380" ry="160" fill="url(#blossomAura)" />
 
-            {/* Natural Gnarled Bonsai Trunk & Spreading Boughs */}
             <g>
-              {/* Spreading Roots */}
               <path
                 d="M 410 575 Q 460 550, 470 500 L 530 500 Q 540 550, 590 575 Q 545 565, 500 562 Q 455 565, 410 575 Z"
                 fill="url(#trunkBark)"
               />
-
-              {/* Main Gnarled Trunk */}
               <path
                 d="M 465 510 C 475 440, 480 390, 465 340 C 450 290, 480 250, 492 230 L 512 230 C 525 250, 550 290, 535 340 C 520 390, 525 440, 535 510 Z"
                 fill="url(#trunkBark)"
               />
-
-              {/* Trunk Bark Line Textures */}
               <path
                 d="M 485 490 Q 480 430, 485 370 Q 492 320, 498 260"
                 stroke="#6E3D27"
@@ -246,49 +224,37 @@ export function ViralTree2010({
                 fill="none"
                 opacity="0.6"
               />
-
-              {/* Left Sweeping Primary Bough */}
               <path
                 d="M 470 340 C 390 305, 300 280, 190 240 C 230 250, 310 270, 400 300 C 440 315, 465 330, 470 340 Z"
                 fill="url(#branchWood)"
               />
-              {/* Left Secondary Branch to Mid Bough */}
               <path
                 d="M 330 285 Q 260 220, 190 190 Q 250 215, 335 260 Z"
                 fill="url(#branchWood)"
               />
-              {/* Left High Reach Branch */}
               <path
                 d="M 475 280 C 430 225, 370 185, 300 135 C 340 160, 400 200, 455 245 Z"
                 fill="url(#branchWood)"
               />
-
-              {/* Right Sweeping Primary Bough */}
               <path
                 d="M 530 340 C 610 305, 700 280, 810 240 C 770 250, 690 270, 600 300 C 560 315, 535 330, 530 340 Z"
                 fill="url(#branchWood)"
               />
-              {/* Right Secondary Branch to Mid Bough */}
               <path
                 d="M 670 285 Q 740 220, 810 190 Q 750 215, 665 260 Z"
                 fill="url(#branchWood)"
               />
-              {/* Right High Reach Branch */}
               <path
                 d="M 525 280 C 570 225, 630 185, 700 135 C 660 160, 600 200, 545 245 Z"
                 fill="url(#branchWood)"
               />
-
-              {/* Central Crown Spires */}
               <path
                 d="M 495 230 C 485 170, 460 135, 435 95 C 460 115, 485 150, 500 200 C 515 150, 540 115, 565 95 C 540 135, 515 170, 505 230 Z"
                 fill="url(#branchWood)"
               />
             </g>
 
-            {/* ORGANIC MULTI-LAYERED BLOSSOM CANOPY (No rigid billiard balls) */}
             <g>
-              {/* Layer 1: Deep Rose Backdrop Clouds (Depth & Shadow) */}
               <g opacity="0.82">
                 <ellipse cx="230" cy="245" rx="105" ry="70" fill="url(#blossomDeep)" />
                 <ellipse cx="360" cy="195" rx="115" ry="78" fill="url(#blossomDeep)" />
@@ -298,7 +264,6 @@ export function ViralTree2010({
                 <ellipse cx="500" cy="230" rx="110" ry="70" fill="url(#blossomDeep)" />
               </g>
 
-              {/* Layer 2: Watercolor Midground Flower Masses */}
               <g opacity="0.94">
                 <ellipse cx="195" cy="240" rx="85" ry="62" fill="url(#blossomMid)" />
                 <ellipse cx="275" cy="210" rx="95" ry="70" fill="url(#blossomMid)" />
@@ -312,7 +277,6 @@ export function ViralTree2010({
                 <ellipse cx="500" cy="205" rx="115" ry="75" fill="url(#blossomMid)" />
               </g>
 
-              {/* Layer 3: High Luminous Cloud Highlights */}
               <g opacity="0.96">
                 <ellipse cx="370" cy="140" rx="72" ry="52" fill="url(#blossomSoft)" />
                 <ellipse cx="500" cy="98" rx="80" ry="58" fill="url(#blossomSoft)" />
@@ -322,7 +286,6 @@ export function ViralTree2010({
                 <ellipse cx="500" cy="180" rx="85" ry="55" fill="url(#blossomSoft)" />
               </g>
 
-              {/* Scattered Fresh Botanical Leaves (Organic duos at branch edges) */}
               {[
                 { x: 140, y: 220, rot: -20 },
                 { x: 220, y: 155, rot: 15 },
@@ -345,7 +308,6 @@ export function ViralTree2010({
                 />
               ))}
 
-              {/* Detailed 5-Petal Peach Blossom Accents */}
               {[
                 { x: 190, y: 215, s: 1.1 },
                 { x: 250, y: 170, s: 1.2 },
@@ -374,7 +336,6 @@ export function ViralTree2010({
                 />
               ))}
 
-              {/* Gentle Floating Petals around the tree canopy */}
               {[
                 { x: 130, y: 270, r: 25 },
                 { x: 210, y: 290, r: -40 },
@@ -396,7 +357,6 @@ export function ViralTree2010({
             </g>
           </svg>
 
-          {/* HANGING WISHING PLAQUES (Mathematically Locked with Branch Coordinates) */}
           {currentBoys.map((boy, idx) => {
             const coord = BRANCH_COORDINATES[idx % BRANCH_COORDINATES.length];
             const unlocked = isBoyUnlocked ? isBoyUnlocked(boy) : isUnlocked;
@@ -408,22 +368,17 @@ export function ViralTree2010({
                 style={{ top: `${coord.y}%`, left: `${coord.x}%` }}
                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer group transition-transform duration-300 hover:scale-110 active:scale-95 z-20 touch-manipulation"
               >
-                {/* Slender Vertical Silk Cord */}
                 <div className="w-[1px] h-3.5 sm:h-5 bg-gradient-to-b from-[#C5A059] to-[#916B14] shadow-xs -mb-0.5" />
 
-                {/* Minimalist Birchwood Wish Plaque */}
                 <div className="relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#FFFDF9]/95 backdrop-blur-xs border border-[#E8D7DC] shadow-[0_4px_16px_-2px_rgba(136,73,90,0.14)] group-hover:border-[#E06D88] group-hover:shadow-[0_8px_24px_-3px_rgba(224,109,136,0.3)] transition-all">
-                  {/* The Gift Displayed on the Tree */}
                   <span className="shrink-0 flex items-center justify-center size-4 sm:size-5 rounded-full bg-[#FAF0EE] border border-[#F0D5DA] text-[10px] sm:text-xs">
                     {giftIcon}
                   </span>
 
-                  {/* Boy Name with Mobile Text Safeguard */}
                   <span className="text-[10px] sm:text-xs font-serif font-semibold text-[#2C1820] tracking-tight whitespace-nowrap max-w-[62px] sm:max-w-none truncate">
                     {boy.name}
                   </span>
 
-                  {/* Lock/Unlock status indicator */}
                   <span
                     className={`size-1.5 rounded-full shrink-0 ${
                       unlocked ? "bg-emerald-500 shadow-[0_0_6px_#10B981]" : "bg-[#C25953]"
@@ -434,7 +389,6 @@ export function ViralTree2010({
             );
           })}
 
-          {/* Empty state when tree has no letters yet (Compact & Frosted, Doesn't mask tree crown) */}
           {boys.length === 0 && (
             <div className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-md border border-[#F0D5DA] shadow-xl text-center max-w-[240px] sm:max-w-[280px] pointer-events-auto animate-fade-in">
               <span className="text-2xl sm:text-3xl mb-1">🌸</span>
@@ -455,7 +409,6 @@ export function ViralTree2010({
           )}
         </div>
 
-        {/* Multi-page Navigation if > 12 gifts */}
         {totalPages > 1 && (
           <div className="flex items-center gap-3 mt-2 z-20">
             <button
@@ -481,7 +434,6 @@ export function ViralTree2010({
         )}
       </div>
 
-      {/* BOTTOM ACTION DOCK (Responsive Pill for Mobile & Desktop) */}
       <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 sm:gap-2 max-w-[95vw] w-full sm:w-auto px-2">
         <form
           onSubmit={handleQuickSubmit}
@@ -503,7 +455,6 @@ export function ViralTree2010({
           </button>
         </form>
 
-        {/* Discreet link for boys to compose wish */}
         <div className="flex items-center gap-2.5 sm:gap-4 text-[10px] sm:text-[11px] text-[#826A73]">
           <button
             type="button"

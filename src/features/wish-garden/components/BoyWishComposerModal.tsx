@@ -29,7 +29,6 @@ export function BoyWishComposerModal({
   const [ornamentType, setOrnamentType] = useState<OrnamentType>("lotus");
   const [error, setError] = useState("");
 
-  // Trạng thái hiển thị Code Confirmation Box để chụp màn hình
   const [confirmedData, setConfirmedData] = useState<{
     boyName: string;
     secretCode: string;
@@ -80,7 +79,7 @@ export function BoyWishComposerModal({
     }
 
     if (!personalWish.trim()) {
-      setError("Vui lòng nhập lời chúc gửi tặng các bạn nữ nhé!");
+      setError("Vui lòng nhập lời chúc gửi tặng các bạn nữ!");
       return;
     }
 
@@ -95,14 +94,11 @@ export function BoyWishComposerModal({
     );
 
     if (!result.success) {
-      setError(result.message || "Không thể lưu lời chúc. Bạn kiểm tra lại mã nhé!");
+      setError(result.message || "Không thể lưu lời chúc.");
       return;
     }
 
-    // Cập nhật cây ngay lập tức
     onWishUpdated();
-
-    // Hiển thị hộp xác nhận mã để bạn nam chụp màn hình
     setConfirmedData({
       boyName: boyName.trim(),
       secretCode: cleanSecret,
@@ -120,7 +116,9 @@ export function BoyWishComposerModal({
     onClose();
   }
 
-  const selectedOrnament = ORNAMENT_LIST.find((item) => item.type === (confirmedData?.ornamentType || ornamentType));
+  const selectedOrnament = ORNAMENT_LIST.find(
+    (item) => item.type === (confirmedData?.ornamentType || ornamentType)
+  );
 
   return (
     <AnimatePresence>
@@ -131,7 +129,6 @@ export function BoyWishComposerModal({
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className="relative w-full max-w-[480px] rounded-3xl bg-[#1E243A] text-white p-6 sm:p-7 border border-white/15 shadow-2xl my-6"
         >
-          {/* Close Button */}
           <button
             type="button"
             onClick={handleCloseAll}
@@ -140,10 +137,8 @@ export function BoyWishComposerModal({
             ✕
           </button>
 
-          {/* TRƯỜNG HỢP 1: CODE CONFIRMATION BOX ĐỂ CHỤP MÀN HÌNH (SCREENSHOT) */}
           {confirmedData ? (
             <div className="pt-2 text-center animate-fade-in">
-              {/* Badge thông báo */}
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold uppercase tracking-wider mb-2">
                 <span>✓</span> Đã Treo Lời Chúc Lên Cây!
               </span>
@@ -152,15 +147,13 @@ export function BoyWishComposerModal({
                 Thẻ Xác Nhận Mã Bí Mật
               </h2>
               <p className="text-xs text-pink-200/80 mt-1 max-w-sm mx-auto leading-relaxed">
-                Hãy chụp ảnh màn hình thẻ này để gửi riêng cho bạn nữ mở quà trên Cây Ước Nguyện nhé! 📸
+                Chụp ảnh màn hình thẻ này để gửi riêng cho bạn nữ mở quà trên Cây Ước Nguyện.
               </p>
 
-              {/* TẤM VOUCHER / CARD DÀNH RIÊNG ĐỂ CHỤP MÀN HÌNH */}
               <div
                 id="screenshot-voucher"
                 className="my-5 p-6 rounded-3xl bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#FDF0F3] text-[#2C1820] border-2 border-dashed border-[#E06D88]/70 shadow-2xl relative text-left overflow-hidden"
               >
-                {/* Con dấu hoa góc phải */}
                 <div className="absolute top-3 right-3 flex flex-col items-center justify-center size-12 rounded-xl bg-pink-100/90 border border-pink-300 text-pink-700 shadow-sm">
                   <span className="text-base font-bold font-serif">20/10</span>
                   <span className="text-[7px] uppercase font-mono font-bold tracking-tighter">GDGoC</span>
@@ -175,7 +168,6 @@ export function BoyWishComposerModal({
                   </h3>
                 </div>
 
-                {/* Hộp mã bí mật nổi bật nhất để chụp hình */}
                 <div className="my-4 p-4 rounded-2xl bg-white border-2 border-pink-300 shadow-inner text-center">
                   <span className="block text-[10px] font-bold uppercase tracking-widest text-pink-700 mb-1">
                     Mã Bí Mật Mở Quà (Secret Code)
@@ -185,7 +177,6 @@ export function BoyWishComposerModal({
                   </div>
                 </div>
 
-                {/* Thông tin món quà trên cây */}
                 <div className="space-y-2 text-xs text-slate-700 pt-1">
                   <div className="flex items-center gap-2">
                     <span className="text-base">{selectedOrnament?.icon}</span>
@@ -198,14 +189,12 @@ export function BoyWishComposerModal({
                   </div>
                 </div>
 
-                {/* Lời nhắn gửi bạn nữ */}
                 <div className="mt-4 pt-3 border-t border-pink-200/60 flex items-center justify-between text-[10px] text-slate-500">
                   <span>🌸 Bloom With Us 20/10</span>
                   <span className="font-semibold text-pink-700">Chụp màn hình gửi bạn nữ</span>
                 </div>
               </div>
 
-              {/* Nút hành động */}
               <div className="flex flex-col sm:flex-row items-center gap-2.5">
                 <button
                   type="button"
@@ -226,9 +215,7 @@ export function BoyWishComposerModal({
               </div>
             </div>
           ) : (
-            /* TRƯỜNG HỢP 2: FORM SOẠN THƯ VÀ ĐẶT MÃ */
             <div>
-              {/* Header */}
               <div className="border-b border-white/10 pb-3 pr-6">
                 <span className="text-[11px] font-semibold text-pink-300 uppercase tracking-wider">
                   {currentGroup?.group_name || "GDGoC HUST"}
@@ -237,7 +224,7 @@ export function BoyWishComposerModal({
                   Gửi Gắm Lời Chúc 20/10
                 </h2>
                 <p className="text-xs text-white/60 mt-1">
-                  Tự đặt mã bí mật cho bức thư của mình để gửi tặng bạn nữ mở quà trên cây nhé!
+                  Tự đặt mã bí mật cho bức thư để gửi tặng bạn nữ mở quà trên cây.
                 </p>
               </div>
 
@@ -248,18 +235,17 @@ export function BoyWishComposerModal({
                   </div>
                 )}
 
-                {/* 1. Nhập Mã Code Nhóm */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider">
-                      Mã truy cập nhóm (Group Code) *
+                      Mã truy cập nhóm *
                     </label>
                     <button
                       type="button"
                       onClick={() => setAccessCode("GDGOC2010")}
                       className="text-[10px] text-pink-300 hover:text-pink-200 underline cursor-pointer"
                     >
-                      Mã test: GDGOC2010
+                      GDGOC2010
                     </button>
                   </div>
                   <input
@@ -272,7 +258,6 @@ export function BoyWishComposerModal({
                   />
                 </div>
 
-                {/* 2. Tự nhập tên bạn nam (Không có nút bấm sẵn) */}
                 <div>
                   <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
                     Tên bạn nam *
@@ -282,16 +267,15 @@ export function BoyWishComposerModal({
                     required
                     value={boyName}
                     onChange={(e) => setBoyName(e.target.value)}
-                    placeholder="Nhập họ và tên của bạn..."
+                    placeholder="Nhập họ và tên..."
                     className="w-full h-11 px-3.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs focus:outline-none focus:border-pink-400 placeholder:text-white/30"
                   />
                 </div>
 
-                {/* 3. Tự đặt mã bí mật để mở quà/thư */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider">
-                      Đặt mã bí mật để mở quà/thư *
+                      Đặt mã bí mật để mở quà *
                     </label>
                     <button
                       type="button"
@@ -314,7 +298,6 @@ export function BoyWishComposerModal({
                   </p>
                 </div>
 
-                {/* 4. Chọn biểu tượng quà tặng hiển thị trên cây */}
                 <div>
                   <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
                     Chọn biểu tượng quà tặng treo trên cây *
@@ -338,7 +321,6 @@ export function BoyWishComposerModal({
                   </div>
                 </div>
 
-                {/* 5. Lời chúc gửi bạn nữ */}
                 <div>
                   <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
                     Lời chúc gửi bạn nữ *
@@ -353,7 +335,6 @@ export function BoyWishComposerModal({
                   />
                 </div>
 
-                {/* Nút hành động */}
                 <div className="pt-2">
                   <button
                     type="submit"

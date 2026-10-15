@@ -70,7 +70,6 @@ export function GirlAccountModal({
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className="relative w-full max-w-[440px] rounded-3xl bg-[#FFFDFB] text-[#381A2B] p-7 border border-pink-200 shadow-2xl my-6"
         >
-          {/* Close button */}
           <button
             type="button"
             onClick={onClose}
@@ -100,7 +99,6 @@ export function GirlAccountModal({
           )}
 
           {!isLoginMode ? (
-            /* FORM ĐĂNG KÝ BẠN NỮ MỚI */
             <form onSubmit={handleRegister} className="mt-5 space-y-4">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
@@ -154,7 +152,6 @@ export function GirlAccountModal({
               </div>
             </form>
           ) : (
-            /* FORM ĐĂNG NHẬP BẰNG TOKEN CÓ SẴN */
             <form onSubmit={handleLogin} className="mt-5 space-y-4">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">

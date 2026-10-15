@@ -17,13 +17,11 @@ export function Dashboard() {
   const [state, setState] = useState(() => dbService.getState());
   const [notification, setNotification] = useState("");
 
-  // Group form state
   const [groupName, setGroupName] = useState("");
   const [secretCode, setSecretCode] = useState("");
   const [groupAccessCode, setGroupAccessCode] = useState("");
   const [groupWish, setGroupWish] = useState("");
 
-  // Boy form state
   const [boyGroupId, setBoyGroupId] = useState(state.groups[0]?.id || "");
   const [boyName, setBoyName] = useState("");
   const [boyEmail, setBoyEmail] = useState("");
@@ -31,13 +29,11 @@ export function Dashboard() {
   const [boyWish, setBoyWish] = useState("");
   const [boyGift, setBoyGift] = useState("");
 
-  // Girl form state
   const [girlGroupId, setGirlGroupId] = useState(state.groups[0]?.id || "");
   const [girlName, setGirlName] = useState("");
   const [girlEmail, setGirlEmail] = useState("");
   const [girlToken, setGirlToken] = useState("");
 
-  // Question form state
   const [qGroupId, setQGroupId] = useState(state.groups[0]?.id || "");
   const [qText, setQText] = useState("");
   const [optA, setOptA] = useState("");
@@ -47,19 +43,12 @@ export function Dashboard() {
   const [correctKey, setCorrectKey] = useState<OptionKey>("a");
   const [qClue, setQClue] = useState("");
 
-  // Email preview state
-  const [emailType, setEmailType] = useState<"girl" | "boy">("girl");
-  const [selectedGirlId, setSelectedGirlId] = useState(state.girls[0]?.id || "");
-  const [selectedBoyId, setSelectedBoyId] = useState(state.boys[0]?.id || "");
-  const [sendLogs, setSendLogs] = useState<string[]>([]);
-
   function notify(msg: string) {
     setNotification(msg);
     setState({ ...dbService.getState() });
     setTimeout(() => setNotification(""), 3500);
   }
 
-  // Submit Group
   function handleAddGroup(e: React.FormEvent) {
     e.preventDefault();
     if (!groupName.trim() || !secretCode.trim() || !groupAccessCode.trim()) return;
@@ -71,7 +60,6 @@ export function Dashboard() {
     notify("Đã thêm nhóm mới thành công!");
   }
 
-  // Submit Boy
   function handleAddBoy(e: React.FormEvent) {
     e.preventDefault();
     if (!boyName.trim() || !boyEmail.trim()) return;
@@ -84,7 +72,6 @@ export function Dashboard() {
     notify("Đã thêm bạn nam thành công!");
   }
 
-  // Submit Girl
   function handleAddGirl(e: React.FormEvent) {
     e.preventDefault();
     if (!girlName.trim() || !girlEmail.trim()) return;
@@ -96,7 +83,6 @@ export function Dashboard() {
     notify("Đã thêm bạn nữ thành công!");
   }
 
-  // Submit Question
   function handleAddQuestion(e: React.FormEvent) {
     e.preventDefault();
     if (!qText.trim() || !optA.trim() || !optB.trim()) return;
@@ -115,30 +101,6 @@ export function Dashboard() {
     setQClue("");
     notify("Đã thêm câu hỏi minigame thành công!");
   }
-
-  // Simulated Nodemailer Email Send
-  function handleSimulateSend() {
-    const time = new Date().toLocaleTimeString("vi-VN");
-    if (emailType === "girl") {
-      const logs = state.girls.map(
-        (g) => `[${time}] [Nodemailer] Đã gửi email tới bạn nữ ${g.name} (${g.email}) kèm link /play?token=${g.token}`
-      );
-      setSendLogs(logs);
-      notify(`Đã gửi email thành công tới ${state.girls.length} bạn nữ!`);
-    } else {
-      const logs = state.boys.map(
-        (b) => `[${time}] [Nodemailer] Đã gửi email tới bạn nam ${b.name} (${b.email}) kèm mã đăng nhập nhóm.`
-      );
-      setSendLogs(logs);
-      notify(`Đã gửi email thành công tới ${state.boys.length} bạn nam!`);
-    }
-  }
-
-  const currentGirl = state.girls.find((g) => g.id === selectedGirlId) || state.girls[0];
-  const currentBoy = state.boys.find((b) => b.id === selectedBoyId) || state.boys[0];
-  const currentGroup = state.groups.find(
-    (grp) => grp.id === (emailType === "girl" ? currentGirl?.group_id : currentBoy?.group_id)
-  );
 
   function handleAdminLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -213,7 +175,6 @@ export function Dashboard() {
   return (
     <div className="w-full min-h-screen bg-[#0F1426] text-white p-4 sm:p-8 pt-24 sm:pt-28 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header Dashboard */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
           <div>
             <span className="text-[11px] font-bold text-pink-400 uppercase tracking-wider">
@@ -248,14 +209,12 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Toast Notification */}
         {notification && (
           <div className="p-3 rounded-2xl bg-emerald-500/20 border border-emerald-400 text-emerald-200 text-xs font-semibold">
             {notification}
           </div>
         )}
 
-        {/* Tab Navigation */}
         <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-2">
           {[
             { key: "groups", label: `Bảng Nhóm (${state.groups.length})` },
@@ -279,10 +238,8 @@ export function Dashboard() {
           ))}
         </div>
 
-        {/* TAB 1: BẢNG GROUPS */}
         {activeTab === "groups" && (
           <div className="grid lg:grid-cols-[1fr_1.4fr] gap-6">
-            {/* Form thêm nhóm */}
             <form onSubmit={handleAddGroup} className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 space-y-4">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3">
                 Thêm Nhóm Mới (Bảng groups)
@@ -348,7 +305,6 @@ export function Dashboard() {
               </button>
             </form>
 
-            {/* Danh sách nhóm */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 overflow-x-auto">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4">
                 Danh Sách Nhóm Hiện Tại
@@ -372,10 +328,8 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* TAB 2: BẢNG BOYS */}
         {activeTab === "boys" && (
           <div className="grid lg:grid-cols-[1fr_1.4fr] gap-6">
-            {/* Form thêm bạn nam */}
             <form onSubmit={handleAddBoy} className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 space-y-3.5">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3">
                 Thêm Bạn Nam (Bảng boys)
@@ -469,7 +423,6 @@ export function Dashboard() {
               </button>
             </form>
 
-            {/* Danh sách bạn nam */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 overflow-x-auto">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4">
                 Danh Sách Bạn Nam ({state.boys.length})
@@ -496,10 +449,8 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* TAB 3: BẢNG GIRLS */}
         {activeTab === "girls" && (
           <div className="grid lg:grid-cols-[1fr_1.4fr] gap-6">
-            {/* Form thêm bạn nữ */}
             <form onSubmit={handleAddGirl} className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 space-y-4">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3">
                 Thêm Bạn Nữ (Bảng girls)
@@ -566,7 +517,6 @@ export function Dashboard() {
               </button>
             </form>
 
-            {/* Bảng theo dõi bạn nữ */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 overflow-x-auto">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4">
                 Theo Dõi Tiến Độ Bạn Nữ ({state.girls.length})
@@ -605,7 +555,6 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* TAB 4: SOẠN CÂU HỎI */}
         {activeTab === "questions" && (
           <div className="grid lg:grid-cols-[1fr_1.4fr] gap-6">
             <form onSubmit={handleAddQuestion} className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 space-y-3.5">
@@ -710,7 +659,6 @@ export function Dashboard() {
               </button>
             </form>
 
-            {/* Danh sách câu hỏi */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15 overflow-x-auto">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4">
                 Danh Sách Câu Hỏi ({state.questions.length})
@@ -738,10 +686,8 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* TAB 5: MÃ BÍ MẬT & LIÊN KẾT SỰ KIỆN */}
         {activeTab === "links" && (
           <div className="space-y-6">
-            {/* 1. Tra cứu mã theo nhóm */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4 flex items-center justify-between">
                 <span>Tra Cứu Mã Nhóm & Đường Dẫn Cây Lời Chúc</span>
@@ -788,7 +734,6 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* 2. Danh sách link tham gia minigame của bạn nữ */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4 flex items-center justify-between">
                 <span>Liên Kết Thư Mời Dành Cho Bạn Nữ ({state.girls.length})</span>

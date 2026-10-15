@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { dbService, type AppDatabaseService } from "@/services/app-database";
 import type { Girl, Question, OptionKey } from "@/types/database";
 
@@ -17,10 +17,30 @@ export function QuizPlay({
   const [pickedKey, setPickedKey] = useState<OptionKey | null>(null);
   const [feedback, setFeedback] = useState<"idle" | "wrong_1" | "wrong_2_reveal" | "correct">("idle");
   const [loading, setLoading] = useState(true);
-
-  // State cho việc nhập mã thử thách
   const [inputCode, setInputCode] = useState("");
   const [codeError, setCodeError] = useState("");
+
+  const loadGirlByToken = useCallback(
+    (userToken: string) => {
+      const clean = userToken.trim();
+      if (!clean) return;
+
+      let found = activeDb.getGirlByToken(clean);
+      if (!found) {
+        found = activeDb.getOrCreateGirl(clean);
+      }
+
+      setGirl(found);
+      const list = activeDb.getQuestionsForGirl(found);
+      setQuestions(list);
+      setCurrentIndex(found.current_question_index || 0);
+
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("active_girl_token", found.token);
+      }
+    },
+    [activeDb]
+  );
 
   useEffect(() => {
     let resolvedToken = token;
@@ -32,27 +52,7 @@ export function QuizPlay({
       loadGirlByToken(resolvedToken);
     }
     setLoading(false);
-  }, [token, activeDb]);
-
-  function loadGirlByToken(userToken: string) {
-    const clean = userToken.trim();
-    if (!clean) return;
-
-    let found = activeDb.getGirlByToken(clean);
-    if (!found) {
-      // Khi chưa có Supabase, tự động khởi tạo profile test cho token này
-      found = activeDb.getOrCreateGirl(clean);
-    }
-
-    setGirl(found);
-    const list = activeDb.getQuestionsForGirl(found);
-    setQuestions(list);
-    setCurrentIndex(found.current_question_index || 0);
-
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("active_girl_token", found.token);
-    }
-  }
+  }, [token, loadGirlByToken]);
 
   function handleLoginWithCode(e?: React.FormEvent, customToken?: string) {
     if (e) e.preventDefault();
@@ -97,12 +97,10 @@ export function QuizPlay({
     );
   }
 
-  // BƯỚC 1: BẤM VÀO THỬ THÁCH YÊU CẦU NHẬP MÃ TRƯỚC (CÓ SẴN CODE TẠM ĐỂ TEST)
   if (!girl) {
     return (
       <main className="w-full min-h-screen bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EF] to-[#F7D5DF] text-[#381A2B] flex flex-col items-center justify-center p-4 font-sans">
         <div className="w-full max-w-[440px] rounded-3xl bg-[#FFFDFB] p-7 border border-pink-200/90 shadow-2xl text-center">
-          {/* Icon Badge */}
           <div className="size-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center text-xl mx-auto mb-3 font-serif font-bold shadow-md shadow-pink-500/20">
             20/10
           </div>
@@ -118,7 +116,6 @@ export function QuizPlay({
             Nhập mã cá nhân để giải 4 câu hỏi minigame và mở gợi ý nhận quà từ các bạn nam trên cây.
           </p>
 
-          {/* Form nhập mã trực tiếp */}
           <form onSubmit={handleLoginWithCode} className="mt-5 space-y-3">
             {codeError && (
               <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
@@ -148,13 +145,11 @@ export function QuizPlay({
               Vào Thử Thách →
             </button>
           </form>
-
         </div>
       </main>
     );
   }
 
-  // NẾU ĐÃ LÀM XONG 4 CÂU HỎI
   const isFinished = girl.stage === "completed" || currentIndex >= questions.length;
 
   if (isFinished) {
@@ -171,53 +166,44 @@ export function QuizPlay({
             Đã Hoàn Thành Thử Thách
           </span>
 
-          <h1 className="text-2xl font-bold font-serif text-[#431936] mt-1">
-            Chúc mừng {girl.name}!
+          <h1 className="text-2xl font-bold font-serif text-[#431936]">
+            Chúc Mừng {girl.name}!
           </h1>
-          <p className="text-xs text-[#826A73] mt-2 leading-relaxed">
-            Bạn đã xuất sắc vượt qua toàn bộ {questions.length} thử thách! Dưới đây là manh mối để bạn tìm các bạn nam nhận mã mở quà trên cây:
+
+          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+            Bạn đã xuất sắc vượt qua tất cả các câu hỏi của minigame! Giờ đây bạn có thể mở các món quà trên cây ước nguyện.
           </p>
 
-          {/* Danh sách 4 manh mối */}
-          <div className="my-5 space-y-2 text-left">
-            {questions.map((q, idx) => (
-              <div
-                key={q.id}
-                className="p-3.5 rounded-2xl bg-pink-50/70 border border-pink-100 text-xs text-[#381A2B] leading-relaxed"
-              >
-                <span className="font-bold text-pink-700 block mb-0.5">
-                  Gợi ý {idx + 1}:
-                </span>
-                {q.clue}
-              </div>
-            ))}
+          <div className="mt-5 p-4 rounded-2xl bg-pink-50/70 border border-pink-100 text-left space-y-2">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-pink-700">
+              Gợi ý manh mối nhận quà:
+            </span>
+            <ul className="text-xs text-slate-700 space-y-1.5 list-disc list-inside">
+              {questions.map((q, idx) => (
+                <li key={q.id}>
+                  <strong>Câu {idx + 1}:</strong> {q.clue || "Lời chúc ấm áp từ các bạn nam"}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="mt-6 flex flex-col gap-2.5">
             <Link
               to="/boy"
-              search={{ token: girl.token }}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-sm shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 transition-all no-underline active:scale-95 cursor-pointer"
+              search={{ token: girl.token, group: girl.group_id }}
+              className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all cursor-pointer no-underline"
             >
-              <span>Tới Cây Lời Chúc mở quà</span>
+              <span>Đến Cây Ước Nguyện Nhận Quà</span>
+              <span>→</span>
             </Link>
 
-            <div className="flex items-center justify-between text-xs pt-1 px-1">
-              <button
-                type="button"
-                onClick={handleResetTest}
-                className="text-pink-600 hover:underline cursor-pointer"
-              >
-                Làm lại thử thách (Test)
-              </button>
-              <button
-                type="button"
-                onClick={handleSwitchAccount}
-                className="text-slate-500 hover:underline cursor-pointer"
-              >
-                Đổi mã khác
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleResetTest}
+              className="text-xs text-slate-500 hover:text-slate-700 py-1 cursor-pointer"
+            >
+              Làm lại minigame từ đầu
+            </button>
           </div>
         </div>
       </main>
@@ -244,12 +230,10 @@ export function QuizPlay({
     }
 
     if (result.reveal) {
-      // Sai lần 2: hiển thị đáp án đúng và cho bấm đi tiếp
       setFeedback("wrong_2_reveal");
       return;
     }
 
-    // Sai lần 1: hiện đỏ cho chọn lại
     setFeedback("wrong_1");
   }
 
@@ -266,7 +250,6 @@ export function QuizPlay({
   return (
     <main className="w-full min-h-screen bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EF] to-[#F7D5DF] text-[#381A2B] flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-[440px] rounded-3xl bg-[#FFFDFB] p-6 sm:p-7 border border-pink-200/80 shadow-xl shadow-pink-900/5">
-        {/* Header tiến trình */}
         <div className="flex items-center justify-between text-xs text-[#826A73] mb-3">
           <span className="font-semibold text-pink-700">
             Câu hỏi {currentIndex + 1} / {questions.length}
@@ -283,7 +266,6 @@ export function QuizPlay({
           </div>
         </div>
 
-        {/* Thanh tiến trình bar */}
         <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden mb-6">
           <div
             className="h-full bg-gradient-to-r from-pink-500 to-rose-400 transition-all duration-300 rounded-full"
@@ -291,12 +273,10 @@ export function QuizPlay({
           />
         </div>
 
-        {/* Nội dung câu hỏi */}
         <h2 className="text-lg font-bold text-[#381A2B] leading-snug">
           {currentQuestion?.text}
         </h2>
 
-        {/* Danh sách 4 lựa chọn */}
         <div className="mt-5 space-y-2.5">
           {currentQuestion?.options.map((option) => {
             const isPicked = pickedKey === option.key;
@@ -317,7 +297,6 @@ export function QuizPlay({
                 badgeStyle = "bg-red-500 text-white font-bold border-red-500";
               }
             } else if (feedback === "wrong_1" && isPicked) {
-              // Sai lần 1: HIỆN ĐỎ CHO CHỌN LẠI
               btnStyle = "bg-red-50 border-red-400 text-red-900 animate-shake";
               badgeStyle = "bg-red-500 text-white font-bold border-red-500";
             }
@@ -338,7 +317,6 @@ export function QuizPlay({
           })}
         </div>
 
-        {/* THÔNG BÁO VÀ HÀNH ĐỘNG TIẾP THEO */}
         {feedback === "wrong_1" && (
           <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
             <span>Chưa chính xác rồi, bạn thử lại lần nữa nhé!</span>
@@ -348,23 +326,30 @@ export function QuizPlay({
         {feedback === "wrong_2_reveal" && (
           <div className="mt-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2.5">
             <p className="leading-relaxed">
-              Đã hết lượt thử. Đáp án đúng đã được tô màu xanh kèm manh mối bên dưới:
-              <br />
-              <strong className="text-amber-800">Gợi ý nhận diện:</strong> {currentQuestion?.clue}
+              Bạn chưa trả lời chính xác sau 2 lần thử. Đáp án đúng là:{" "}
+              <strong>
+                {currentQuestion?.correct_key.toUpperCase()}.{" "}
+                {currentQuestion?.options.find((o) => o.key.toLowerCase() === currentQuestion.correct_key.toLowerCase())?.label}
+              </strong>
             </p>
+            {currentQuestion?.clue && (
+              <div className="p-2.5 rounded-xl bg-white/80 border border-amber-200 text-[11px] text-amber-800">
+                <strong>Manh mối:</strong> {currentQuestion.clue}
+              </div>
+            )}
             <button
               type="button"
               onClick={handleContinueAfterReveal}
-              className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 font-bold text-xs text-white shadow-md cursor-pointer"
+              className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-md shadow-pink-500/20 transition-all cursor-pointer"
             >
-              Tiếp tục câu tiếp theo
+              Tiếp tục câu tiếp theo →
             </button>
           </div>
         )}
 
         {feedback === "correct" && (
-          <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-semibold flex items-center gap-2">
-            <span>Chính xác! Đang chuyển câu tiếp theo...</span>
+          <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+            <span>Chính xác rồi! Tuyệt vời quá! 🎉</span>
           </div>
         )}
       </div>
