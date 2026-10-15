@@ -22,13 +22,6 @@ export function QuizPlay({
   const [inputCode, setInputCode] = useState("");
   const [codeError, setCodeError] = useState("");
 
-  const TEST_CODES = [
-    { label: "Lan Chi", token: "lanchi_2010" },
-    { label: "Thu Hà", token: "thuha_2010" },
-    { label: "Phương Thảo", token: "thao_hust" },
-    { label: "GDGoC Test", token: "GDGOC2010" },
-  ];
-
   useEffect(() => {
     let resolvedToken = token;
     if (!resolvedToken && typeof localStorage !== "undefined") {
@@ -156,37 +149,6 @@ export function QuizPlay({
             </button>
           </form>
 
-          {/* KHỐI MÃ TẠM ĐỂ TEST KHI CHƯA CÓ SUPABASE */}
-          <div className="mt-5 pt-4 border-t border-pink-100 text-left">
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-xs">💡</span>
-              <span className="text-[11px] font-semibold text-pink-800 uppercase tracking-wider">
-                Mã test tạm thời (Chưa cần Supabase):
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-2.5">
-              Bấm vào bất kỳ bạn nữ nào dưới đây để bắt đầu trải nghiệm ngay:
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              {TEST_CODES.map((item) => (
-                <button
-                  key={item.token}
-                  type="button"
-                  onClick={() => handleLoginWithCode(undefined, item.token)}
-                  className="p-2.5 rounded-xl bg-pink-50/80 hover:bg-pink-100/90 border border-pink-200/80 text-left transition-all active:scale-95 cursor-pointer group"
-                >
-                  <div className="text-xs font-bold text-[#431936] group-hover:text-pink-700 flex items-center justify-between">
-                    <span>🌸 {item.label}</span>
-                    <span className="text-[10px] text-pink-400">→</span>
-                  </div>
-                  <div className="text-[10px] font-mono text-pink-600 mt-0.5">
-                    {item.token}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </main>
     );
