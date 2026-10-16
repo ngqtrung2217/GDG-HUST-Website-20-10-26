@@ -68,7 +68,7 @@ export function QuizPlay({
     loadGirlByToken(clean);
   }
 
-  function handleResetTest() {
+  function handleResetQuiz() {
     if (!girl) return;
     girl.current_question_index = 0;
     girl.wrong_attempts = 0;
@@ -199,7 +199,7 @@ export function QuizPlay({
 
             <button
               type="button"
-              onClick={handleResetTest}
+              onClick={handleResetQuiz}
               className="text-xs text-slate-500 hover:text-slate-700 py-1 cursor-pointer"
             >
               Làm lại minigame từ đầu

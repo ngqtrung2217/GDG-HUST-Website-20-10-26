@@ -6,7 +6,7 @@ interface WishLetterRevealModalProps {
   boy: Boy | null;
   isUnlocked: boolean;
   onClose: () => void;
-  _onOpenCodeInput?: () => void;
+  onOpenCodeInput?: () => void;
   onDirectUnlockCode?: (code: string) => boolean;
 }
 
@@ -14,7 +14,7 @@ export function WishLetterRevealModal({
   boy,
   isUnlocked,
   onClose,
-  _onOpenCodeInput,
+  onOpenCodeInput: _onOpenCodeInput,
   onDirectUnlockCode,
 }: WishLetterRevealModalProps) {
   const [phase, setPhase] = useState<"envelope" | "opening" | "revealed">("envelope");

@@ -23,12 +23,15 @@ export interface Boy {
   group_id: string;
   name: string;
   email?: string;
+  token?: string;
   secret_code?: string;
   description: string;
   personal_wish: string;
   ornament_type: OrnamentType;
   gift_hint?: string;
   has_written_wish?: boolean;
+  assigned_girl_id?: string;
+  assigned_girl_name?: string;
 }
 
 export type GirlStage = "not_started" | "quiz" | "finding_boys" | "completed";
@@ -44,14 +47,18 @@ export interface Girl {
   stage: GirlStage;
   completed_at?: string;
   unlocked_codes?: string[];
+  assigned_boy_id?: string;
+  assigned_boy_name?: string;
 }
 
 export type OptionKey = "a" | "b" | "c" | "d";
+export type QuestionType = "multiple_choice" | "boolean";
 
 export interface Question {
   id: string;
   group_id?: string;
   boy_id?: string;
+  question_type?: QuestionType;
   text: string;
   options: {
     key: OptionKey;
@@ -59,5 +66,27 @@ export interface Question {
   }[];
   correct_key: OptionKey;
   clue: string;
+}
+
+export interface EmailPreviewData {
+  recipientType: "girl" | "boy";
+  recipientName: string;
+  recipientEmail: string;
+  subject: string;
+  htmlContent: string;
+  plainText: string;
+  actionUrl: string;
+}
+
+export interface EmailExportItem {
+  id: string;
+  name: string;
+  email: string;
+  role: "girl" | "boy";
+  groupName: string;
+  token: string;
+  actionUrl: string;
+  secretCode?: string;
+  assignedPartner?: string;
 }
 

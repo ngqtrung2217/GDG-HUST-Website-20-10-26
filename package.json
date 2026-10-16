@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test src/services/app-database.test.ts",
+    "test": "node --experimental-strip-types --test src/services/app-database.test.ts src/services/email-template.test.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

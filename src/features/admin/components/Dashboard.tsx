@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { dbService } from "@/services/app-database";
+import { supabase } from "@/services/supabase";
 import type { OptionKey } from "@/types/database";
 
 export function Dashboard() {
@@ -25,6 +26,9 @@ export function Dashboard() {
   const [boyGroupId, setBoyGroupId] = useState(state.groups[0]?.id || "");
   const [boyName, setBoyName] = useState("");
   const [boyEmail, setBoyEmail] = useState("");
+  const [boyToken, setBoyToken] = useState("");
+  const [boySecretCode, setBoySecretCode] = useState("");
+  const [boyAssignedGirlId, setBoyAssignedGirlId] = useState("");
   const [boyDesc, setBoyDesc] = useState("");
   const [boyWish, setBoyWish] = useState("");
   const [boyGift, setBoyGift] = useState("");
@@ -33,8 +37,10 @@ export function Dashboard() {
   const [girlName, setGirlName] = useState("");
   const [girlEmail, setGirlEmail] = useState("");
   const [girlToken, setGirlToken] = useState("");
+  const [girlAssignedBoyId, setGirlAssignedBoyId] = useState("");
 
   const [qGroupId, setQGroupId] = useState(state.groups[0]?.id || "");
+  const [qType, setQType] = useState<"multiple_choice" | "boolean">("multiple_choice");
   const [qText, setQText] = useState("");
   const [optA, setOptA] = useState("");
   const [optB, setOptB] = useState("");
@@ -43,10 +49,142 @@ export function Dashboard() {
   const [correctKey, setCorrectKey] = useState<OptionKey>("a");
   const [qClue, setQClue] = useState("");
 
+  // Supabase Configuration State
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+  const [supabaseUrlInput, setSupabaseUrlInput] = useState(() => supabase.getConfig().url);
+  const [supabaseKeyInput, setSupabaseKeyInput] = useState(() => supabase.getConfig().anonKey);
+  const [supabaseStatus, setSupabaseStatus] = useState<string>("");
+  const [isTestingSupabase, setIsTestingSupabase] = useState(false);
+
   function notify(msg: string) {
     setNotification(msg);
     setState({ ...dbService.getState() });
     setTimeout(() => setNotification(""), 3500);
+  }
+
+  async function handleTestSupabase() {
+    setIsTestingSupabase(true);
+    setSupabaseStatus("Đang kiểm tra kết nối tới Supabase...");
+    supabase.setConfig(supabaseUrlInput, supabaseKeyInput);
+    const res = await supabase.testConnection();
+    setSupabaseStatus(res.message);
+    setIsTestingSupabase(false);
+  }
+
+  async function handleSaveSupabase(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!supabaseUrlInput.trim() || !supabaseKeyInput.trim()) {
+      setSupabaseStatus("Vui lòng nhập đầy đủ Supabase URL và Anon Key!");
+      return;
+    }
+    supabase.setConfig(supabaseUrlInput, supabaseKeyInput);
+    notify("Đã lưu cấu hình Supabase! Đang đồng bộ...");
+    const synced = await dbService.syncFromSupabase();
+    if (synced) {
+      notify("Đồng bộ dữ liệu từ Supabase thành công!");
+    } else {
+      notify("Đã lưu cấu hình Supabase thành công!");
+    }
+    setIsSupabaseModalOpen(false);
+  }
+
+  function handleDisableSupabase() {
+    supabase.clearConfig();
+    setSupabaseUrlInput("");
+    setSupabaseKeyInput("");
+    setSupabaseStatus("Đã tắt Supabase, chuyển về chế độ Local.");
+    notify("Đã tắt kết nối Supabase, chuyển về bộ nhớ Local.");
+    setIsSupabaseModalOpen(false);
+  }
+
+  async function handlePushAllToSupabase() {
+    if (!supabase.isConfigured()) {
+      notify("Vui lòng cấu hình và lưu Supabase trước khi đẩy dữ liệu!");
+      return;
+    }
+    setSupabaseStatus("Đang đẩy toàn bộ dữ liệu lên Supabase...");
+    try {
+      const currentState = dbService.getState();
+      await Promise.all([
+        ...currentState.groups.map((g) => supabase.insert("groups", g)),
+        ...currentState.boys.map((b) => supabase.insert("boys", b)),
+        ...currentState.girls.map((g) => supabase.insert("girls", g)),
+        ...currentState.questions.map((q) => supabase.insert("questions", q)),
+      ]);
+      setSupabaseStatus("Đã đẩy toàn bộ danh sách lên Supabase thành công!");
+      notify("Đã tải toàn bộ nhóm, nam, nữ, câu hỏi lên Supabase thành công!");
+    } catch (err: any) {
+      setSupabaseStatus(`Lỗi khi đẩy dữ liệu: ${err.message || String(err)}`);
+    }
+  }
+
+  function handleCopySQLSchema() {
+    const sql = `-- GDGoC HUST 20/10 Database Schema
+CREATE TABLE IF NOT EXISTS groups (
+  id TEXT PRIMARY KEY,
+  group_name TEXT NOT NULL,
+  secret_code TEXT NOT NULL,
+  group_access_code TEXT NOT NULL,
+  wish_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS boys (
+  id TEXT PRIMARY KEY,
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT,
+  token TEXT,
+  secret_code TEXT,
+  description TEXT,
+  personal_wish TEXT,
+  ornament_type TEXT DEFAULT 'lotus',
+  gift_hint TEXT,
+  has_written_wish BOOLEAN DEFAULT false,
+  assigned_girl_id TEXT,
+  assigned_girl_name TEXT
+);
+
+CREATE TABLE IF NOT EXISTS girls (
+  id TEXT PRIMARY KEY,
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT,
+  token TEXT UNIQUE NOT NULL,
+  current_question_index INTEGER DEFAULT 0,
+  wrong_attempts INTEGER DEFAULT 0,
+  stage TEXT DEFAULT 'not_started',
+  completed_at TIMESTAMPTZ,
+  unlocked_codes JSONB DEFAULT '[]'::jsonb,
+  assigned_boy_id TEXT,
+  assigned_boy_name TEXT
+);
+
+CREATE TABLE IF NOT EXISTS questions (
+  id TEXT PRIMARY KEY,
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+  boy_id TEXT,
+  question_type TEXT DEFAULT 'multiple_choice',
+  text TEXT NOT NULL,
+  options JSONB NOT NULL,
+  correct_key TEXT NOT NULL,
+  clue TEXT
+);
+
+ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE boys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE girls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public Read/Write groups" ON groups FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Public Read/Write boys" ON boys FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Public Read/Write girls" ON girls FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (true) WITH CHECK (true);
+`;
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(sql);
+      notify("Đã sao chép mã SQL schema! Hãy dán vào Supabase SQL Editor nhé!");
+    }
   }
 
   function handleAddGroup(e: React.FormEvent) {
@@ -63,12 +201,23 @@ export function Dashboard() {
   function handleAddBoy(e: React.FormEvent) {
     e.preventDefault();
     if (!boyName.trim() || !boyEmail.trim()) return;
-    dbService.addBoy(boyGroupId, boyName, boyEmail, boyDesc, boyWish, boyGift);
+    const token = boyToken.trim() || `boy_${Math.random().toString(36).slice(2, 8)}`;
+    const secret = boySecretCode.trim().toUpperCase() || `M${Math.floor(100 + Math.random() * 900)}`;
+    const newBoy = dbService.addBoy(boyGroupId, boyName, boyEmail, boyDesc, boyWish, boyGift);
+    newBoy.token = token;
+    newBoy.secret_code = secret;
+    if (boyAssignedGirlId) {
+      dbService.assignBoyToGirl(newBoy.id, boyAssignedGirlId);
+    }
+    dbService.saveToStorage();
     setBoyName("");
     setBoyEmail("");
+    setBoyToken("");
+    setBoySecretCode("");
     setBoyDesc("");
     setBoyWish("");
     setBoyGift("");
+    setBoyAssignedGirlId("");
     notify("Đã thêm bạn nam thành công!");
   }
 
@@ -76,23 +225,42 @@ export function Dashboard() {
     e.preventDefault();
     if (!girlName.trim() || !girlEmail.trim()) return;
     const token = girlToken.trim() || `token_${Math.random().toString(36).slice(2, 8)}`;
-    dbService.addGirl(girlGroupId, girlName, girlEmail, token);
+    const newGirl = dbService.addGirl(girlGroupId, girlName, girlEmail, token);
+    if (girlAssignedBoyId) {
+      dbService.assignBoyToGirl(girlAssignedBoyId, newGirl.id);
+    }
+    dbService.saveToStorage();
     setGirlName("");
     setGirlEmail("");
     setGirlToken("");
+    setGirlAssignedBoyId("");
     notify("Đã thêm bạn nữ thành công!");
   }
 
   function handleAddQuestion(e: React.FormEvent) {
     e.preventDefault();
-    if (!qText.trim() || !optA.trim() || !optB.trim()) return;
-    const options = [
-      { key: "a" as OptionKey, label: optA.trim() },
-      { key: "b" as OptionKey, label: optB.trim() },
-      { key: "c" as OptionKey, label: optC.trim() || "Lựa chọn C" },
-      { key: "d" as OptionKey, label: optD.trim() || "Lựa chọn D" },
-    ];
-    dbService.addQuestion(qGroupId, qText, options, correctKey, qClue);
+    if (!qText.trim()) return;
+
+    let options: { key: OptionKey; label: string }[];
+    if (qType === "boolean") {
+      options = [
+        { key: "a" as OptionKey, label: optA.trim() || "Đúng (Chính xác)" },
+        { key: "b" as OptionKey, label: optB.trim() || "Sai" },
+      ];
+    } else {
+      if (!optA.trim() || !optB.trim()) return;
+      options = [
+        { key: "a" as OptionKey, label: optA.trim() },
+        { key: "b" as OptionKey, label: optB.trim() },
+        { key: "c" as OptionKey, label: optC.trim() || "Lựa chọn C" },
+        { key: "d" as OptionKey, label: optD.trim() || "Lựa chọn D" },
+      ];
+    }
+
+    const q = dbService.addQuestion(qGroupId, qText, options, correctKey, qClue);
+    q.question_type = qType;
+    dbService.saveToStorage();
+
     setQText("");
     setOptA("");
     setOptB("");
@@ -100,6 +268,21 @@ export function Dashboard() {
     setOptD("");
     setQClue("");
     notify("Đã thêm câu hỏi minigame thành công!");
+  }
+
+
+  function handleDownloadCSV() {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:8080";
+    const csvData = dbService.exportEmailCSV(baseUrl);
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "danh_sach_email_2010_gdgoc.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    notify("Đã tải xuống file CSV danh sách email và token thành công!");
   }
 
   function handleAdminLogin(e: React.FormEvent) {
@@ -184,20 +367,37 @@ export function Dashboard() {
               Bảng Điều Phối & Quản Trị
             </h1>
             <p className="text-xs text-white/60 mt-1">
-              Quản lý danh sách nam/nữ, ghép nhóm, soạn câu hỏi và gửi email tự động qua Nodemailer.
+              Quản lý danh sách nam/nữ, ghép nhóm, phân công và tra cứu link sự kiện gửi thủ công.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSupabaseUrlInput(supabase.getConfig().url);
+                setSupabaseKeyInput(supabase.getConfig().anonKey);
+                setSupabaseStatus("");
+                setIsSupabaseModalOpen(true);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                supabase.isConfigured()
+                  ? "bg-emerald-500/20 border-emerald-400 text-emerald-300"
+                  : "bg-amber-500/20 border-amber-400 text-amber-300"
+              }`}
+            >
+              <span>{supabase.isConfigured() ? "🟢" : "🟡"}</span>
+              <span>{supabase.isConfigured() ? "Supabase: Đã Bật" : "Cấu Hình Supabase"}</span>
+            </button>
             <button
               type="button"
               onClick={() => {
                 dbService.resetDatabase();
-                notify("Đã đặt lại dữ liệu mẫu thành công!");
+                notify("Đã khởi tạo lại dữ liệu thành công!");
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-white/70 transition-colors"
+              className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-white/70 transition-colors cursor-pointer"
             >
-              Reset dữ liệu mẫu
+              Khởi tạo lại dữ liệu
             </button>
             <button
               type="button"
@@ -227,7 +427,7 @@ export function Dashboard() {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === tab.key
                   ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/20"
                   : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
@@ -579,6 +779,44 @@ export function Dashboard() {
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
+                  Định dạng câu hỏi (Theo kịch bản BTC)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQType("multiple_choice");
+                      setOptA("");
+                      setOptB("");
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                      qType === "multiple_choice"
+                        ? "bg-pink-500/20 border-pink-400 text-pink-300"
+                        : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                    }`}
+                  >
+                    1 trong 4 (4 đáp án)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQType("boolean");
+                      setOptA("Đúng (Chính xác)");
+                      setOptB("Sai");
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                      qType === "boolean"
+                        ? "bg-pink-500/20 border-pink-400 text-pink-300"
+                        : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                    }`}
+                  >
+                    Đúng / Sai (2 đáp án)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
                   Nội dung câu hỏi *
                 </label>
                 <textarea
@@ -590,38 +828,51 @@ export function Dashboard() {
                   className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-xs text-white focus:outline-none resize-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <input
-                  type="text"
-                  required
-                  placeholder="Đáp án A"
-                  value={optA}
-                  onChange={(e) => setOptA(e.target.value)}
-                  className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
-                />
-                <input
-                  type="text"
-                  required
-                  placeholder="Đáp án B"
-                  value={optB}
-                  onChange={(e) => setOptB(e.target.value)}
-                  className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Đáp án C"
-                  value={optC}
-                  onChange={(e) => setOptC(e.target.value)}
-                  className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Đáp án D"
-                  value={optD}
-                  onChange={(e) => setOptD(e.target.value)}
-                  className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
-                />
-              </div>
+
+              {qType === "boolean" ? (
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-emerald-300">
+                    A. Đúng (Chính xác)
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-rose-300">
+                    B. Sai
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Đáp án A"
+                    value={optA}
+                    onChange={(e) => setOptA(e.target.value)}
+                    className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Đáp án B"
+                    value={optB}
+                    onChange={(e) => setOptB(e.target.value)}
+                    className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Đáp án C"
+                    value={optC}
+                    onChange={(e) => setOptC(e.target.value)}
+                    className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Đáp án D"
+                    value={optD}
+                    onChange={(e) => setOptD(e.target.value)}
+                    className="h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-white"
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3 items-center">
                 <div>
                   <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
@@ -632,10 +883,14 @@ export function Dashboard() {
                     onChange={(e) => setCorrectKey(e.target.value as OptionKey)}
                     className="w-full h-9 px-3 rounded-xl bg-white/10 border border-white/20 text-xs text-white"
                   >
-                    <option value="a" className="bg-[#1E243A]">A</option>
-                    <option value="b" className="bg-[#1E243A]">B</option>
-                    <option value="c" className="bg-[#1E243A]">C</option>
-                    <option value="d" className="bg-[#1E243A]">D</option>
+                    <option value="a" className="bg-[#1E243A]">A{qType === "boolean" ? " (Đúng)" : ""}</option>
+                    <option value="b" className="bg-[#1E243A]">B{qType === "boolean" ? " (Sai)" : ""}</option>
+                    {qType === "multiple_choice" && (
+                      <>
+                        <option value="c" className="bg-[#1E243A]">C</option>
+                        <option value="d" className="bg-[#1E243A]">D</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -667,8 +922,27 @@ export function Dashboard() {
                 {state.questions.map((q, idx) => (
                   <div key={q.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-pink-300">Câu {idx + 1}</span>
-                      <span className="text-[10px] text-emerald-300 font-mono">Đáp án đúng: {q.correct_key.toUpperCase()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-pink-300">Câu {idx + 1}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/70">
+                          {q.question_type === "boolean" ? "Đúng/Sai" : "1 trong 4"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-emerald-300 font-mono">
+                          Đáp án đúng: {q.correct_key.toUpperCase()}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            dbService.deleteQuestion(q.id);
+                            notify("Đã xóa câu hỏi thành công!");
+                          }}
+                          className="text-rose-400 hover:text-rose-300 text-[11px] transition-colors cursor-pointer"
+                        >
+                          Xóa
+                        </button>
+                      </div>
                     </div>
                     <p className="font-medium text-white">{q.text}</p>
                     <div className="grid grid-cols-2 gap-1 text-white/70 text-[11px]">
@@ -689,10 +963,24 @@ export function Dashboard() {
         {activeTab === "links" && (
           <div className="space-y-6">
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15">
-              <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4 flex items-center justify-between">
-                <span>Tra Cứu Mã Nhóm & Đường Dẫn Cây Lời Chúc</span>
-                <span className="text-xs font-normal text-white/50">{state.groups.length} Nhóm tham gia</span>
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Mã Bí Mật & Liên Kết Gửi Thủ Công
+                  </h3>
+                  <p className="text-xs text-white/60 mt-0.5">
+                    Tra cứu và sao chép link/mã riêng để gửi thiệp hoặc nhắn tin thủ công cho người tham gia.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadCSV}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <span>📥</span> Tải File CSV Gửi Thủ Công
+                </button>
+              </div>
+
               <div className="grid md:grid-cols-2 gap-4">
                 {state.groups.map((grp) => {
                   const boysInGroup = state.boys.filter((b) => b.group_id === grp.id);
@@ -734,10 +1022,11 @@ export function Dashboard() {
               </div>
             </div>
 
+            {/* Girls Links Table */}
             <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15">
               <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4 flex items-center justify-between">
-                <span>Liên Kết Thư Mời Dành Cho Bạn Nữ ({state.girls.length})</span>
-                <span className="text-xs font-normal text-white/50">Bấm để sao chép link gửi riêng</span>
+                <span>1. Liên Kết Dành Cho Bạn Nữ ({state.girls.length})</span>
+                <span className="text-xs font-normal text-white/50">Link minigame giải đố</span>
               </h3>
 
               <div className="overflow-x-auto">
@@ -746,21 +1035,20 @@ export function Dashboard() {
                     <tr className="border-b border-white/10 text-white/50">
                       <th className="pb-3 font-semibold">Bạn Nữ</th>
                       <th className="pb-3 font-semibold">Email</th>
-                      <th className="pb-3 font-semibold">Nhóm Nam Phụ Trách</th>
+                      <th className="pb-3 font-semibold">Bạn Nam Phụ Trách</th>
                       <th className="pb-3 font-semibold">Trạng Thái</th>
-                      <th className="pb-3 font-semibold text-right">Link Chơi Minigame</th>
+                      <th className="pb-3 font-semibold text-right">Link Minigame</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {state.girls.map((girl) => {
-                      const grp = state.groups.find((g) => g.id === girl.group_id);
                       const origin = typeof window !== "undefined" ? window.location.origin : "";
                       const playLink = `${origin}/play?token=${girl.token}`;
                       return (
                         <tr key={girl.id} className="hover:bg-white/5">
                           <td className="py-3 font-medium text-white">{girl.name}</td>
                           <td className="py-3 text-white/60 font-mono text-[11px]">{girl.email}</td>
-                          <td className="py-3 text-pink-300 font-medium">{grp?.group_name || "Chưa gán"}</td>
+                          <td className="py-3 text-pink-300 font-medium">{girl.assigned_boy_name || "Chưa gán"}</td>
                           <td className="py-3">
                             <span
                               className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
@@ -797,6 +1085,179 @@ export function Dashboard() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Boys Links Table */}
+            <div className="p-6 rounded-3xl bg-[#1E243A] border border-white/15">
+              <h3 className="text-base font-bold text-white border-b border-white/10 pb-3 mb-4 flex items-center justify-between">
+                <span>2. Liên Kết Dành Cho Bạn Nam ({state.boys.length})</span>
+                <span className="text-xs font-normal text-white/50">Mã bí mật & link viết lời chúc</span>
+              </h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-white/50">
+                      <th className="pb-3 font-semibold">Bạn Nam</th>
+                      <th className="pb-3 font-semibold">Email</th>
+                      <th className="pb-3 font-semibold">Bạn Nữ Phụ Trách</th>
+                      <th className="pb-3 font-semibold">Mã Bí Mật (Secret Code)</th>
+                      <th className="pb-3 font-semibold text-right">Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {state.boys.map((boy) => {
+                      const origin = typeof window !== "undefined" ? window.location.origin : "";
+                      const boyLink = `${origin}/boy?token=${boy.token || boy.id}`;
+                      return (
+                        <tr key={boy.id} className="hover:bg-white/5">
+                          <td className="py-3 font-medium text-white">{boy.name}</td>
+                          <td className="py-3 text-white/60 font-mono text-[11px]">{boy.email}</td>
+                          <td className="py-3 text-pink-300 font-medium">{boy.assigned_girl_name || "Chưa gán"}</td>
+                          <td className="py-3">
+                            <code className="px-2 py-0.5 rounded-md bg-white/10 text-emerald-300 font-bold font-mono text-xs">
+                              {boy.secret_code || "Chưa đặt"}
+                            </code>
+                          </td>
+                          <td className="py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (typeof navigator !== "undefined" && navigator.clipboard) {
+                                  navigator.clipboard.writeText(`Link: ${boyLink}\nMã bí mật: ${boy.secret_code || "N/A"}`);
+                                  notify(`Đã sao chép link và mã của ${boy.name}!`);
+                                }
+                              }}
+                              className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-[11px] border border-white/20 transition-all cursor-pointer"
+                            >
+                              Sao Chép Link & Mã
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isSupabaseModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto font-sans">
+            <div className="relative w-full max-w-[520px] rounded-3xl bg-[#1E243A] text-white p-6 sm:p-7 border border-white/20 shadow-2xl my-6 space-y-4">
+              <button
+                type="button"
+                onClick={() => setIsSupabaseModalOpen(false)}
+                className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+
+              <div>
+                <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest block">
+                  Cơ Sở Dữ Liệu Đám Mây · PostgreSQL
+                </span>
+                <h3 className="text-xl font-bold text-white mt-0.5 font-serif">
+                  Cấu Hình Supabase (GitHub Pages)
+                </h3>
+                <p className="text-xs text-white/60 mt-1">
+                  Đồng bộ hóa dữ liệu lời chúc và tiến độ sự kiện trực tuyến qua Supabase API.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-indigo-500/15 border border-indigo-400/25 text-[11px] text-indigo-200 space-y-1">
+                <span className="font-semibold block text-indigo-100">✨ Tự động hóa qua GitHub Actions:</span>
+                <p>
+                  Khi cấu hình Secrets trên GitHub (<code className="bg-black/30 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> và <code className="bg-black/30 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code>), keys sẽ được nạp tự động vào toàn bộ ứng dụng lúc build.
+                  <b className="text-white"> Tất cả bạn nữ và bạn nam khi mở link web đều tự động kết nối Supabase, không cần nhập key thủ công!</b>
+                </p>
+              </div>
+
+              {supabaseStatus && (
+                <div className="p-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-pink-200">
+                  {supabaseStatus}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveSupabase} className="space-y-3.5">
+                <div>
+                  <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
+                    Supabase Project URL *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://xyzproject.supabase.co"
+                    value={supabaseUrlInput}
+                    onChange={(e) => setSupabaseUrlInput(e.target.value)}
+                    className="w-full h-10 px-3.5 rounded-xl bg-white/10 border border-white/20 text-xs font-mono text-white focus:outline-none focus:border-pink-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
+                    Supabase Anon Public Key (anonKey) *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={supabaseKeyInput}
+                    onChange={(e) => setSupabaseKeyInput(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-xs font-mono text-white focus:outline-none focus:border-pink-400 resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={isTestingSupabase}
+                    onClick={handleTestSupabase}
+                    className="flex-1 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/15 transition-colors cursor-pointer"
+                  >
+                    {isTestingSupabase ? "Đang kiểm tra..." : "🔍 Kiểm Tra Kết Nối"}
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-md shadow-pink-500/25 transition-all cursor-pointer"
+                  >
+                    💾 Lưu & Kích Hoạt
+                  </button>
+                </div>
+              </form>
+
+              <div className="border-t border-white/10 pt-3 space-y-2 text-xs">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-white/50 block">
+                  Công cụ hỗ trợ triển khai
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePushAllToSupabase}
+                    className="h-9 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 font-semibold text-[11px] transition-colors cursor-pointer"
+                  >
+                    📤 Đẩy Dữ Liệu Lên Supabase
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopySQLSchema}
+                    className="h-9 px-3 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 font-semibold text-[11px] transition-colors cursor-pointer"
+                  >
+                    📋 Sao Chép Script SQL
+                  </button>
+                </div>
+
+                {supabase.isConfigured() && (
+                  <button
+                    type="button"
+                    onClick={handleDisableSupabase}
+                    className="w-full mt-2 py-2 text-rose-400 hover:text-rose-300 text-[11px] transition-colors cursor-pointer underline text-center"
+                  >
+                    Tắt Supabase và dùng bộ nhớ Local Storage
+                  </button>
+                )}
               </div>
             </div>
           </div>

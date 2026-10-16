@@ -1,5 +1,20 @@
-import type { Group, Boy, Girl, Question, OptionKey, OrnamentType } from "../types/database.ts";
+import type {
+  Group,
+  Boy,
+  Girl,
+  Question,
+  OptionKey,
+  OrnamentType,
+  EmailPreviewData,
+  EmailExportItem,
+} from "../types/database.ts";
 import { supabase } from "./supabase.ts";
+import {
+  generateGirlInvitationEmail,
+  generateBoyInvitationEmail,
+  exportAllRecipientsToCSV,
+  exportAllRecipientsToJSON,
+} from "./email-template.ts";
 
 export interface DatabaseState {
   groups: Group[];
@@ -25,48 +40,60 @@ const DEFAULT_BOYS: Boy[] = [
     group_id: "grp_hust",
     name: "Minh Anh",
     email: "minhanh@hust.edu.vn",
+    token: "minhanh_2010",
     secret_code: "SEN",
     description: "Bạn nam Core Team Tech đeo kính gọng đen, hay mặc áo khoác nỉ xám, ngồi bàn 3 tầng 2 Thư viện Tạ Quang Bửu.",
     personal_wish: "Cảm ơn bạn vì những buổi chạy dự án đến khuya mà vẫn luôn tràn đầy năng lượng. Chúc bạn 20/10 thật nhẹ nhàng, bình an và luôn cười tươi nhé!",
     ornament_type: "lotus",
     gift_hint: "Một bookmark giấy dó thủ công kèm kẹp tóc xinh xắn",
     has_written_wish: true,
+    assigned_girl_id: "girl_1",
+    assigned_girl_name: "Lan Chi",
   },
   {
     id: "boy_2",
     group_id: "grp_hust",
     name: "Đức Huy",
     email: "duchuy@hust.edu.vn",
+    token: "duchuy_2010",
     secret_code: "MAI",
     description: "Bạn nam cao ráo, đeo đồng hồ thông minh màu cam, balo có móc khóa GDG HUST.",
     personal_wish: "Bạn luôn chu đáo nhớ lịch deadline cho cả nhóm. Hôm nay hãy để mọi người chăm sóc và gửi tặng bạn những điều ngọt ngào nhất nha. Chúc bạn 20/10 ấm áp!",
     ornament_type: "giftbox",
     gift_hint: "Ly giữ nhiệt khắc tên GDGoC HUST",
     has_written_wish: true,
+    assigned_girl_id: "girl_2",
+    assigned_girl_name: "Thu Hà",
   },
   {
     id: "boy_3",
     group_id: "grp_hust",
     name: "Quang Khải",
     email: "quangkhai@hust.edu.vn",
+    token: "quangkhai_2010",
     secret_code: "DAO",
     description: "Bạn nam hay mang theo bình nước màu xanh mint trà đào, nụ cười rất duyên.",
     personal_wish: "Chúc bạn 20/10 ngập tràn niềm vui! Bạn luôn rất giỏi giang, nhiệt huyết và đáng yêu trong mắt mọi người.",
     ornament_type: "peach",
     gift_hint: "Hộp bánh quy bơ nướng hạnh nhân thơm ngon",
     has_written_wish: true,
+    assigned_girl_id: "girl_3",
+    assigned_girl_name: "Phương Thảo",
   },
   {
     id: "boy_4",
     group_id: "grp_hust",
     name: "Tuấn Kiệt",
     email: "tuankiet@hust.edu.vn",
+    token: "tuankiet_2010",
     secret_code: "LAN",
     description: "Bạn nam có giọng nói trầm ấm, hay ngồi ở sảnh nhà C7, tay hay gõ phím cơ switch êm.",
     personal_wish: "Chúc các bạn nữ luôn giữ vững ngọn lửa đam mê công nghệ, tự tin tỏa sáng và luôn được trân quý mỗi ngày.",
     ornament_type: "snowglobe",
     gift_hint: "Một chậu sen đá mini để bàn làm việc",
     has_written_wish: true,
+    assigned_girl_id: "girl_1",
+    assigned_girl_name: "Lan Chi",
   },
 ];
 
@@ -75,34 +102,40 @@ const DEFAULT_GIRLS: Girl[] = [
     id: "girl_1",
     group_id: "grp_hust",
     name: "Lan Chi",
-    email: "",
+    email: "lanchi.hust@gmail.com",
     token: "lanchi_2010",
     current_question_index: 0,
     wrong_attempts: 0,
     stage: "not_started",
     unlocked_codes: [],
+    assigned_boy_id: "boy_1",
+    assigned_boy_name: "Minh Anh",
   },
   {
     id: "girl_2",
     group_id: "grp_hust",
     name: "Thu Hà",
-    email: "",
+    email: "thuha.gdg@gmail.com",
     token: "thuha_2010",
     current_question_index: 0,
     wrong_attempts: 0,
     stage: "not_started",
     unlocked_codes: [],
+    assigned_boy_id: "boy_2",
+    assigned_boy_name: "Đức Huy",
   },
   {
     id: "girl_3",
     group_id: "grp_hust",
     name: "Phương Thảo",
-    email: "",
+    email: "phuongthao.sis@hust.edu.vn",
     token: "thao_hust",
     current_question_index: 0,
     wrong_attempts: 0,
     stage: "not_started",
     unlocked_codes: [],
+    assigned_boy_id: "boy_3",
+    assigned_boy_name: "Quang Khải",
   },
 ];
 
@@ -111,6 +144,7 @@ const DEFAULT_QUESTIONS: Question[] = [
     id: "q_1",
     group_id: "grp_hust",
     boy_id: "boy_1",
+    question_type: "multiple_choice",
     text: "Trên fanpage GDG on Campus HUST, sự kiện công nghệ thường niên quy mô lớn nhất vào mỗi dịp mùa thu được cộng đồng mong đợi nhất có tên là gì?",
     options: [
       { key: "a", label: "DevFest Hanoi / DevFest HUST" },
@@ -125,6 +159,7 @@ const DEFAULT_QUESTIONS: Question[] = [
     id: "q_2",
     group_id: "grp_hust",
     boy_id: "boy_2",
+    question_type: "multiple_choice",
     text: "Cuộc thi lập trình toàn cầu thường niên do Google tổ chức dành cho sinh viên nhằm giải quyết 17 Mục tiêu Phát triển Bền vững của Liên Hợp Quốc mà CLB phát động là gì?",
     options: [
       { key: "a", label: "Google Summer of Code" },
@@ -139,6 +174,7 @@ const DEFAULT_QUESTIONS: Question[] = [
     id: "q_3",
     group_id: "grp_hust",
     boy_id: "boy_3",
+    question_type: "multiple_choice",
     text: "Trước khi đổi nhận diện thương hiệu theo chuẩn Google toàn cầu vào năm 2024, câu lạc bộ trên Facebook từng có tên gọi quen thuộc là gì?",
     options: [
       { key: "a", label: "GDSC HUST (Google Developer Student Clubs - HUST)" },
@@ -153,6 +189,7 @@ const DEFAULT_QUESTIONS: Question[] = [
     id: "q_4",
     group_id: "grp_hust",
     boy_id: "boy_4",
+    question_type: "multiple_choice",
     text: "Khẩu hiệu (motto) quen thuộc xuất hiện trong các bài đăng truyền cảm hứng của GDG on Campus HUST thể hiện tinh thần đồng đội cùng tiến bước là gì?",
     options: [
       { key: "a", label: "Together we grow - Build good things together" },
@@ -162,6 +199,19 @@ const DEFAULT_QUESTIONS: Question[] = [
     ],
     correct_key: "a",
     clue: "Gợi ý: Bạn Tuấn Kiệt có giọng nói trầm ấm, hay ngồi ở sảnh nhà C7 với chiếc bàn phím cơ gõ êm.",
+  },
+  {
+    id: "q_5",
+    group_id: "grp_hust",
+    boy_id: "boy_1",
+    question_type: "boolean",
+    text: "GDG on Campus HUST là cộng đồng sinh viên công nghệ được thành lập và hoạt động dưới sự bảo trợ của Google Developers tại Đại học Bách Khoa Hà Nội, đúng hay sai?",
+    options: [
+      { key: "a", label: "Đúng (Chính xác)" },
+      { key: "b", label: "Sai" },
+    ],
+    correct_key: "a",
+    clue: "Gợi ý: Hãy tìm gặp các bạn nam Core Team để cùng chia sẻ niềm vui 20/10 và nhận mã bí mật nhé!",
   },
 ];
 
@@ -314,6 +364,16 @@ export class AppDatabaseService {
     const clean = token.trim();
     if (!clean) return null;
     return this.state.girls.find((g) => g.token === clean) || null;
+  }
+
+  public getBoyByToken(token: string): Boy | null {
+    const clean = token.trim();
+    if (!clean) return null;
+    return (
+      this.state.boys.find(
+        (b) => (b.token && b.token === clean) || b.id === clean
+      ) || null
+    );
   }
 
   public getOrCreateGirl(token: string, fallbackName?: string): Girl {
@@ -531,13 +591,13 @@ export class AppDatabaseService {
         g.group_access_code.toUpperCase() === cleanCode ||
         g.secret_code.toUpperCase() === cleanCode
     );
-    if (!group && (cleanCode === "GDGOC2010" || cleanCode === "2010" || cleanCode === "TEST" || cleanCode === "")) {
+    if (!group && (cleanCode === "GDGOC2010" || cleanCode === "2010" || cleanCode === "")) {
       group = this.state.groups[0];
     }
     if (!group) {
       return {
         success: false,
-        message: "Mã nhóm chưa đúng. Bạn có thể dùng mã test: GDGOC2010 nhé!",
+        message: "Mã nhóm chưa đúng. Vui lòng kiểm tra lại mã truy cập nhóm nhé!",
       };
     }
 
@@ -840,13 +900,103 @@ export class AppDatabaseService {
     return true;
   }
 
-  public deleteBoy(boyId: string): boolean {
-    const initialLen = this.state.boys.length;
-    this.state.boys = this.state.boys.filter((b) => b.id !== boyId);
-    if (this.state.boys.length !== initialLen) {
+  public assignBoyToGirl(boyId: string, girlId: string): boolean {
+    const boy = this.state.boys.find((b) => b.id === boyId);
+    const girl = this.state.girls.find((g) => g.id === girlId);
+    if (!boy || !girl) return false;
+
+    boy.assigned_girl_id = girl.id;
+    boy.assigned_girl_name = girl.name;
+    girl.assigned_boy_id = boy.id;
+    girl.assigned_boy_name = boy.name;
+
+    this.saveToStorage();
+    if (this.isUsingSupabase()) {
+      supabase.update<Boy>("boys", `id=eq.${boy.id}`, {
+        assigned_girl_id: boy.assigned_girl_id,
+        assigned_girl_name: boy.assigned_girl_name,
+      });
+      supabase.update<Girl>("girls", `id=eq.${girl.id}`, {
+        assigned_boy_id: girl.assigned_boy_id,
+        assigned_boy_name: girl.assigned_boy_name,
+      });
+    }
+    return true;
+  }
+
+  public generateEmailPreview(
+    type: "girl" | "boy",
+    recipientId: string,
+    baseUrl?: string
+  ): EmailPreviewData | null {
+    if (type === "girl") {
+      const girl = this.state.girls.find(
+        (g) => g.id === recipientId || g.token === recipientId
+      );
+      if (!girl) return null;
+      const group = this.state.groups.find((grp) => grp.id === girl.group_id);
+      return generateGirlInvitationEmail(girl, group, baseUrl);
+    } else {
+      const boy = this.state.boys.find(
+        (b) => b.id === recipientId || b.token === recipientId
+      );
+      if (!boy) return null;
+      const group = this.state.groups.find((grp) => grp.id === boy.group_id);
+      return generateBoyInvitationEmail(boy, group, baseUrl);
+    }
+  }
+
+  public exportEmailList(baseUrl?: string): EmailExportItem[] {
+    return exportAllRecipientsToJSON(
+      this.state.boys,
+      this.state.girls,
+      this.state.groups,
+      baseUrl
+    );
+  }
+
+  public exportEmailCSV(baseUrl?: string): string {
+    return exportAllRecipientsToCSV(
+      this.state.boys,
+      this.state.girls,
+      this.state.groups,
+      baseUrl
+    );
+  }
+
+  public deleteGirl(girlId: string): boolean {
+    const initialLen = this.state.girls.length;
+    this.state.girls = this.state.girls.filter((g) => g.id !== girlId);
+    if (this.state.girls.length !== initialLen) {
       this.saveToStorage();
       if (this.isUsingSupabase()) {
-        supabase.delete("boys", `id=eq.${boyId}`);
+        supabase.delete("girls", `id=eq.${girlId}`);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  public deleteQuestion(questionId: string): boolean {
+    const initialLen = this.state.questions.length;
+    this.state.questions = this.state.questions.filter((q) => q.id !== questionId);
+    if (this.state.questions.length !== initialLen) {
+      this.saveToStorage();
+      if (this.isUsingSupabase()) {
+        supabase.delete("questions", `id=eq.${questionId}`);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  public deleteGroup(groupId: string): boolean {
+    const initialLen = this.state.groups.length;
+    this.state.groups = this.state.groups.filter((g) => g.id !== groupId);
+    if (this.state.groups.length !== initialLen) {
+      this.saveToStorage();
+      if (this.isUsingSupabase()) {
+        supabase.delete("groups", `id=eq.${groupId}`);
       }
       return true;
     }

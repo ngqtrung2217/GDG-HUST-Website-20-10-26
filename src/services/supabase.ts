@@ -10,8 +10,24 @@ function getSupabaseConfig(): SupabaseConfig {
       : typeof process !== "undefined"
       ? (process.env as Record<string, string | undefined>)
       : {};
-  const url = (env.VITE_SUPABASE_URL || "").trim().replace(/\/+$/, "");
-  const anonKey = (env.VITE_SUPABASE_ANON_KEY || "").trim();
+  const envUrl = (env.VITE_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  const envAnonKey = (env.VITE_SUPABASE_ANON_KEY || "").trim();
+
+  // If injected at build time by GitHub Actions or .env, use them directly
+  if (envUrl && envAnonKey) {
+    return { url: envUrl, anonKey: envAnonKey };
+  }
+
+  // Fallback for optional manual setup in localStorage (e.g. testing)
+  let url = envUrl;
+  let anonKey = envAnonKey;
+  if (typeof localStorage !== "undefined") {
+    const savedUrl = localStorage.getItem("VITE_SUPABASE_URL");
+    const savedKey = localStorage.getItem("VITE_SUPABASE_ANON_KEY");
+    if (savedUrl) url = savedUrl.trim().replace(/\/+$/, "");
+    if (savedKey) anonKey = savedKey.trim();
+  }
+
   return { url, anonKey };
 }
 
@@ -28,6 +44,50 @@ export class SupabaseClient {
 
   public getUrl(): string {
     return this.config.url;
+  }
+
+  public getConfig(): SupabaseConfig {
+    return { ...this.config };
+  }
+
+  public setConfig(url: string, anonKey: string): void {
+    this.config = {
+      url: url.trim().replace(/\/+$/, ""),
+      anonKey: anonKey.trim(),
+    };
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("VITE_SUPABASE_URL", this.config.url);
+      localStorage.setItem("VITE_SUPABASE_ANON_KEY", this.config.anonKey);
+    }
+  }
+
+  public clearConfig(): void {
+    this.config = { url: "", anonKey: "" };
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("VITE_SUPABASE_URL");
+      localStorage.removeItem("VITE_SUPABASE_ANON_KEY");
+    }
+  }
+
+  public async testConnection(): Promise<{ success: boolean; message: string }> {
+    if (!this.isConfigured()) {
+      return { success: false, message: "Chưa cấu hình Supabase URL hoặc Anon Key." };
+    }
+    try {
+      const res = await fetch(`${this.config.url}/rest/v1/groups?select=id&limit=1`, {
+        method: "GET",
+        headers: this.getHeaders(),
+      });
+      if (res.ok) {
+        return { success: true, message: "Kết nối tới Supabase thành công!" };
+      }
+      return {
+        success: false,
+        message: `Máy chủ Supabase phản hồi HTTP ${res.status}. Bạn kiểm tra bảng 'groups' đã tạo chưa nhé!`,
+      };
+    } catch (err: any) {
+      return { success: false, message: `Lỗi kết nối mạng: ${err.message || String(err)}` };
+    }
   }
 
   private getHeaders(): HeadersInit {
