@@ -18,23 +18,34 @@ export function SecretCodeModal({
 }: SecretCodeModalProps) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const clean = code.trim().toUpperCase();
     if (!clean) return;
 
-    const result = dbService.verifySecretCode(clean, girlToken);
-    if (!result.success || !result.group) {
-      setError("Mã bí mật chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
-      return;
-    }
-
+    setLoading(true);
     setError("");
-    onSuccessUnlock(result.group, result.boys || [], result.unlockedBoy);
-    onClose();
+
+    try {
+      const result = await dbService.verifySecretCodeAsync(clean, girlToken);
+      if (!result.success || !result.group) {
+        setError("Mã bí mật chưa chính xác. Bạn kiểm tra lại với bạn nam nhé!");
+        setLoading(false);
+        return;
+      }
+
+      setError("");
+      onSuccessUnlock(result.group, result.boys || [], result.unlockedBoy);
+      onClose();
+    } catch {
+      setError("Đã xảy ra lỗi khi kiểm tra mã. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -49,7 +60,8 @@ export function SecretCodeModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+            disabled={loading}
+            className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors disabled:opacity-50"
           >
             ✕
           </button>
@@ -62,7 +74,7 @@ export function SecretCodeModal({
               Nhập Mã Mở Quà & Thư
             </h2>
             <p className="text-xs text-white/60 mt-1">
-              Nhập mã bí mật (VD: 2010) nhận được từ bạn nam để mở khóa các món quà và bức thư trên cây.
+              Nhập mã bí mật nhận được từ bạn nam để mở khóa các món quà và bức thư trên cây.
             </p>
           </div>
 
@@ -80,10 +92,11 @@ export function SecretCodeModal({
               <input
                 type="text"
                 required
-                placeholder="VD: 2010..."
+                disabled={loading}
+                placeholder="Nhập mã bí mật..."
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white font-mono uppercase tracking-wider text-base focus:outline-none focus:border-pink-400 placeholder:normal-case placeholder:font-sans placeholder:tracking-normal placeholder:text-white/30"
+                className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white font-mono uppercase tracking-wider text-base focus:outline-none focus:border-pink-400 placeholder:normal-case placeholder:font-sans placeholder:tracking-normal placeholder:text-white/30 disabled:opacity-50"
               />
               <p className="text-[11px] text-white/50 mt-1.5">
                 Mã bí mật do bạn nam cung cấp sau khi bạn tìm thấy người ấy.
@@ -92,9 +105,10 @@ export function SecretCodeModal({
 
             <button
               type="submit"
-              className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 font-semibold text-sm shadow-lg shadow-pink-500/30 transition-all cursor-pointer"
+              disabled={loading}
+              className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 font-semibold text-sm shadow-lg shadow-pink-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Mở Khóa Toàn Bộ Quà
+              {loading ? "Đang Kiểm Tra..." : "Mở Khóa Toàn Bộ Quà"}
             </button>
           </form>
         </motion.div>
@@ -102,4 +116,3 @@ export function SecretCodeModal({
     </AnimatePresence>
   );
 }
-

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { dbService } from "@/services/app-database";
-import type { OrnamentType } from "@/types/database";
+import type { Boy, OrnamentType } from "@/types/database";
 
 interface BoyWishComposerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onWishUpdated: () => void;
+  initialBoy?: Boy | null;
 }
 
 const ORNAMENT_LIST: { type: OrnamentType; label: string; icon: string }[] = [
@@ -21,13 +22,25 @@ export function BoyWishComposerModal({
   isOpen,
   onClose,
   onWishUpdated,
+  initialBoy,
 }: BoyWishComposerModalProps) {
   const [accessCode, setAccessCode] = useState("GDGOC2010");
-  const [boyName, setBoyName] = useState("");
-  const [secretCode, setSecretCode] = useState("");
-  const [personalWish, setPersonalWish] = useState("");
-  const [ornamentType, setOrnamentType] = useState<OrnamentType>("lotus");
+  const [boyName, setBoyName] = useState(initialBoy?.name || "");
+  const [secretCode, setSecretCode] = useState(initialBoy?.secret_code || "");
+  const [personalWish, setPersonalWish] = useState(initialBoy?.personal_wish || "");
+  const [ornamentType, setOrnamentType] = useState<OrnamentType>(initialBoy?.ornament_type || "lotus");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (initialBoy) {
+      setBoyName(initialBoy.name);
+      setSecretCode(initialBoy.secret_code || "");
+      setPersonalWish(initialBoy.personal_wish || "");
+      if (initialBoy.ornament_type) {
+        setOrnamentType(initialBoy.ornament_type);
+      }
+    }
+  }, [initialBoy, isOpen]);
 
   const [confirmedData, setConfirmedData] = useState<{
     boyName: string;
@@ -201,7 +214,6 @@ export function BoyWishComposerModal({
                   onClick={handleCopyCode}
                   className="w-full sm:w-1/2 h-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <span>📋</span>
                   <span>{copied ? "Đã sao chép mã!" : "Sao chép mã"}</span>
                 </button>
 
@@ -232,6 +244,20 @@ export function BoyWishComposerModal({
                 {error && (
                   <div className="p-2.5 rounded-xl bg-red-500/20 border border-red-500/40 text-xs text-red-200">
                     {error}
+                  </div>
+                )}
+
+                {initialBoy && (
+                  <div className="p-3 rounded-2xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 text-xs text-pink-200 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span>Xin chào: <strong className="text-white">{initialBoy.name}</strong></span>
+                      <span className="px-2 py-0.5 rounded-full bg-pink-500/30 text-[10px] font-mono text-pink-200">Đã nhận diện</span>
+                    </div>
+                    {initialBoy.assigned_girl_name && (
+                      <div className="text-[11px] text-white/90">
+                        🌸 Bạn nữ được phân công: <strong className="text-pink-300 font-semibold">{initialBoy.assigned_girl_name}</strong>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -282,7 +308,7 @@ export function BoyWishComposerModal({
                       onClick={generateRandomCode}
                       className="text-[10px] text-pink-300 hover:text-pink-200 underline cursor-pointer"
                     >
-                      🎲 Tạo mã nhanh
+                      Tạo mã nhanh
                     </button>
                   </div>
                   <input
@@ -290,7 +316,7 @@ export function BoyWishComposerModal({
                     required
                     value={secretCode}
                     onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
-                    placeholder="VD: HUY2010, LOVE2010, GDG88..."
+                    placeholder="Nhập mã bí mật..."
                     className="w-full h-11 px-3.5 rounded-xl bg-white/10 border border-white/20 text-white font-mono uppercase tracking-wider text-xs focus:outline-none focus:border-pink-400 placeholder:text-white/30 placeholder:normal-case placeholder:font-sans"
                   />
                   <p className="text-[10px] text-white/40 mt-1">

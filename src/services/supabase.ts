@@ -1,60 +1,102 @@
+import { createClient, type SupabaseClient as OfficialSupabaseClient } from "@supabase/supabase-js";
+import {
+  supabase as globalSupabase,
+  supabaseUrl as initialUrl,
+  supabaseAnonKey as initialKey,
+} from "../supabase.ts";
+
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
 }
 
-function getSupabaseConfig(): SupabaseConfig {
-  const env: Record<string, string | undefined> =
-    typeof import.meta !== "undefined" && import.meta.env
-      ? import.meta.env
-      : typeof process !== "undefined"
-      ? (process.env as Record<string, string | undefined>)
-      : {};
-  const url = (env.VITE_SUPABASE_URL || "").trim().replace(/\/+$/, "");
-  const anonKey = (env.VITE_SUPABASE_ANON_KEY || "").trim();
-  return { url, anonKey };
-}
-
-export class SupabaseClient {
+export class SupabaseService {
   private config: SupabaseConfig;
+  public client: OfficialSupabaseClient;
 
   constructor() {
-    this.config = getSupabaseConfig();
+    this.config = {
+      url: initialUrl,
+      anonKey: initialKey,
+    };
+    this.client = globalSupabase;
   }
 
   public isConfigured(): boolean {
-    return Boolean(this.config.url && this.config.anonKey);
+    return (
+      Boolean(this.config.url && this.config.anonKey) &&
+      !this.config.url.includes("placeholder-project")
+    );
   }
 
   public getUrl(): string {
     return this.config.url;
   }
 
-  private getHeaders(): HeadersInit {
-    return {
-      "Content-Type": "application/json",
-      apikey: this.config.anonKey,
-      Authorization: `Bearer ${this.config.anonKey}`,
-      Prefer: "return=representation",
-    };
+  public getConfig(): SupabaseConfig {
+    return { ...this.config };
   }
 
-  public async from<T>(table: string, queryParams: string = "select=*"): Promise<T[] | null> {
+  public setConfig(url: string, anonKey: string): void {
+    const cleanUrl = url.trim().replace(/\/+$/, "");
+    const cleanKey = anonKey.trim();
+    this.config = {
+      url: cleanUrl,
+      anonKey: cleanKey,
+    };
+
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("VITE_SUPABASE_URL", cleanUrl);
+      localStorage.setItem("VITE_SUPABASE_ANON_KEY", cleanKey);
+    }
+
+    if (cleanUrl && cleanKey) {
+      this.client = createClient(cleanUrl, cleanKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        realtime: { params: { eventsPerSecond: 10 } },
+      });
+    }
+  }
+
+  public clearConfig(): void {
+    this.config = { url: "", anonKey: "" };
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("VITE_SUPABASE_URL");
+      localStorage.removeItem("VITE_SUPABASE_ANON_KEY");
+    }
+    this.client = createClient("https://placeholder-project.supabase.co", "placeholder-key");
+  }
+
+  public async testConnection(): Promise<{ success: boolean; message: string }> {
+    if (!this.isConfigured()) {
+      return { success: false, message: "Chưa cấu hình Supabase URL hoặc Anon Key." };
+    }
+    try {
+      const { error } = await this.client.from("groups").select("id").limit(1);
+      if (error) {
+        return {
+          success: false,
+          message: `Lỗi Supabase: ${error.message} (mã: ${error.code}). Bạn kiểm tra bảng 'groups' hoặc RLS nhé!`,
+        };
+      }
+      return { success: true, message: "Kết nối tới Supabase thành công!" };
+    } catch (err: any) {
+      return { success: false, message: `Lỗi kết nối: ${err.message || String(err)}` };
+    }
+  }
+
+  public async from<T>(table: string, _queryParams: string = "select=*"): Promise<T[] | null> {
     if (!this.isConfigured()) return null;
 
     try {
-      const url = `${this.config.url}/rest/v1/${table}?${queryParams}`;
-      const res = await fetch(url, {
-        method: "GET",
-        headers: this.getHeaders(),
-      });
-      if (!res.ok) {
-        console.warn(`[Supabase] GET ${table} failed: ${res.status}`);
+      const { data, error } = await this.client.from(table).select("*");
+      if (error) {
+        console.warn(`[Supabase] SELECT from ${table} failed:`, error.message);
         return null;
       }
-      return (await res.json()) as T[];
+      return (data as T[]) || [];
     } catch (err) {
-      console.warn(`[Supabase] Network error fetching ${table}:`, err);
+      console.warn(`[Supabase] Query error on ${table}:`, err);
       return null;
     }
   }
@@ -63,20 +105,14 @@ export class SupabaseClient {
     if (!this.isConfigured()) return null;
 
     try {
-      const url = `${this.config.url}/rest/v1/${table}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: this.getHeaders(),
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        console.warn(`[Supabase] POST ${table} failed: ${res.status}`);
+      const { data: res, error } = await this.client.from(table).upsert(data as any).select();
+      if (error) {
+        console.warn(`[Supabase] UPSERT into ${table} failed:`, error.message);
         return null;
       }
-      const result = await res.json();
-      return Array.isArray(result) ? result[0] : (result as T);
+      return Array.isArray(res) && res.length > 0 ? (res[0] as T) : null;
     } catch (err) {
-      console.warn(`[Supabase] Network error inserting into ${table}:`, err);
+      console.warn(`[Supabase] Insert error on ${table}:`, err);
       return null;
     }
   }
@@ -89,20 +125,21 @@ export class SupabaseClient {
     if (!this.isConfigured()) return null;
 
     try {
-      const url = `${this.config.url}/rest/v1/${table}?${filterParam}`;
-      const res = await fetch(url, {
-        method: "PATCH",
-        headers: this.getHeaders(),
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        console.warn(`[Supabase] PATCH ${table} failed: ${res.status}`);
+      let query = this.client.from(table).update(data as any);
+      const match = filterParam.match(/^([a-zA-Z0-9_]+)=eq\.(.+)$/);
+      if (match) {
+        const [, col, val] = match;
+        query = query.eq(col, val);
+      }
+
+      const { data: res, error } = await query.select();
+      if (error) {
+        console.warn(`[Supabase] UPDATE on ${table} failed:`, error.message);
         return null;
       }
-      const result = await res.json();
-      return Array.isArray(result) ? result[0] : (result as T);
+      return Array.isArray(res) && res.length > 0 ? (res[0] as T) : null;
     } catch (err) {
-      console.warn(`[Supabase] Network error updating ${table}:`, err);
+      console.warn(`[Supabase] Update error on ${table}:`, err);
       return null;
     }
   }
@@ -111,17 +148,23 @@ export class SupabaseClient {
     if (!this.isConfigured()) return false;
 
     try {
-      const url = `${this.config.url}/rest/v1/${table}?${filterParam}`;
-      const res = await fetch(url, {
-        method: "DELETE",
-        headers: this.getHeaders(),
-      });
-      return res.ok;
+      let query = this.client.from(table).delete();
+      const match = filterParam.match(/^([a-zA-Z0-9_]+)=eq\.(.+)$/);
+      if (match) {
+        const [, col, val] = match;
+        query = query.eq(col, val);
+      }
+      const { error } = await query;
+      if (error) {
+        console.warn(`[Supabase] DELETE on ${table} failed:`, error.message);
+        return false;
+      }
+      return true;
     } catch (err) {
-      console.warn(`[Supabase] Network error deleting from ${table}:`, err);
+      console.warn(`[Supabase] Delete error on ${table}:`, err);
       return false;
     }
   }
 }
 
-export const supabase = new SupabaseClient();
+export const supabase = new SupabaseService();

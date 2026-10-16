@@ -13,13 +13,16 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
+  group: pages
   cancel-in-progress: true
 
 jobs:
   build:
     name: Build Frontend
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.VITE_SUPABASE_URL || secrets.SUPABASE_URL || secrets.URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || secrets.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY || secrets.KEY || secrets.ANON_KEY }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -27,13 +30,20 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Check Supabase secrets
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::error::Supabase URL or key is empty. Check repo secrets."
+            exit 1
+          fi
 
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
       - name: Build Application
-        run: npx vite build
+        run: npm run build
 
       - name: Create 404.html Fallback
         run: cp dist/index.html dist/404.html
@@ -41,7 +51,7 @@ jobs:
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'dist'
+          path: dist
 
   deploy:
     name: Deploy to GitHub Pages

@@ -68,7 +68,7 @@ export function QuizPlay({
     loadGirlByToken(clean);
   }
 
-  function handleResetTest() {
+  function handleResetQuiz() {
     if (!girl) return;
     girl.current_question_index = 0;
     girl.wrong_attempts = 0;
@@ -190,7 +190,7 @@ export function QuizPlay({
           <div className="mt-6 flex flex-col gap-2.5">
             <Link
               to="/boy"
-              search={{ token: girl.token, group: girl.group_id }}
+              search={{ token: girl.token, group: girl.group_id, view: "tree" }}
               className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all cursor-pointer no-underline"
             >
               <span>Đến Cây Ước Nguyện Nhận Quà</span>
@@ -199,7 +199,7 @@ export function QuizPlay({
 
             <button
               type="button"
-              onClick={handleResetTest}
+              onClick={handleResetQuiz}
               className="text-xs text-slate-500 hover:text-slate-700 py-1 cursor-pointer"
             >
               Làm lại minigame từ đầu
@@ -349,7 +349,7 @@ export function QuizPlay({
 
         {feedback === "correct" && (
           <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
-            <span>Chính xác rồi! Tuyệt vời quá! 🎉</span>
+            <span>Chính xác rồi! Tuyệt vời quá!</span>
           </div>
         )}
       </div>
