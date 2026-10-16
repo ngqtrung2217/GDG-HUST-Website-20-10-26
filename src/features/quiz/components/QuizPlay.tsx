@@ -190,7 +190,7 @@ export function QuizPlay({
           <div className="mt-6 flex flex-col gap-2.5">
             <Link
               to="/boy"
-              search={{ token: girl.token, group: girl.group_id }}
+              search={{ token: girl.token, group: girl.group_id, view: "tree" }}
               className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all cursor-pointer no-underline"
             >
               <span>Đến Cây Ước Nguyện Nhận Quà</span>

@@ -52,6 +52,17 @@ CREATE TABLE IF NOT EXISTS questions (
   clue TEXT
 );
 
+-- Default organization group
+INSERT INTO groups (id, group_name, secret_code, group_access_code, wish_message)
+VALUES (
+  'grp_hust',
+  'GDGoC HUST',
+  '2010',
+  'GDGOC2010',
+  'Chúc toàn thể các bạn nữ GDGoC HUST ngày 20/10 luôn xinh đẹp, rạng rỡ và ngập tràn hạnh phúc!'
+)
+ON CONFLICT (id) DO NOTHING;
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE boys ENABLE ROW LEVEL SECURITY;
@@ -75,3 +86,13 @@ BEGIN
   END IF;
 END $$;
 
+-- Enable Supabase Realtime publication
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE groups, boys, girls, questions;
+  EXCEPTION WHEN OTHERS THEN
+    -- Table already added or publication difference
+    NULL;
+  END;
+END $$;

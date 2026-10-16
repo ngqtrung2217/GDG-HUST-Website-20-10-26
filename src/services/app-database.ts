@@ -23,18 +23,20 @@ export interface DatabaseState {
   questions: Question[];
 }
 
-const DEFAULT_GROUPS: Group[] = [
+export const DEFAULT_GROUPS: Group[] = [
   {
     id: "grp_hust",
     group_name: "GDGoC HUST",
     secret_code: "2010",
     group_access_code: "GDGOC2010",
-    wish_message: "Chúc toàn thể các bạn nữ GDGoC HUST ngày 20/10 luôn xinh đẹp, rạng rỡ và ngập tràn hạnh phúc!",
+    wish_message:
+      "Chúc toàn thể các bạn nữ GDGoC HUST ngày 20/10 luôn xinh đẹp, rạng rỡ và ngập tràn hạnh phúc!",
     created_at: "2026-10-15T00:00:00.000Z",
   },
 ];
 
-const DEFAULT_BOYS: Boy[] = [
+// In production, no demo recipients. These are strictly fixtures for unit testing in memory mode.
+const TEST_BOYS_FIXTURE: Boy[] = [
   {
     id: "boy_1",
     group_id: "grp_hust",
@@ -42,62 +44,17 @@ const DEFAULT_BOYS: Boy[] = [
     email: "minhanh@hust.edu.vn",
     token: "minhanh_2010",
     secret_code: "SEN",
-    description: "Bạn nam Core Team Tech đeo kính gọng đen, hay mặc áo khoác nỉ xám, ngồi bàn 3 tầng 2 Thư viện Tạ Quang Bửu.",
-    personal_wish: "Cảm ơn bạn vì những buổi chạy dự án đến khuya mà vẫn luôn tràn đầy năng lượng. Chúc bạn 20/10 thật nhẹ nhàng, bình an và luôn cười tươi nhé!",
+    description: "Bạn nam Core Team Tech đeo kính gọng đen, hay mặc áo khoác nỉ xám.",
+    personal_wish: "Chúc bạn 20/10 thật nhẹ nhàng, bình an và luôn cười tươi nhé!",
     ornament_type: "lotus",
     gift_hint: "Một bookmark giấy dó thủ công kèm kẹp tóc xinh xắn",
     has_written_wish: true,
     assigned_girl_id: "girl_1",
     assigned_girl_name: "Lan Chi",
   },
-  {
-    id: "boy_2",
-    group_id: "grp_hust",
-    name: "Đức Huy",
-    email: "duchuy@hust.edu.vn",
-    token: "duchuy_2010",
-    secret_code: "MAI",
-    description: "Bạn nam cao ráo, đeo đồng hồ thông minh màu cam, balo có móc khóa GDG HUST.",
-    personal_wish: "Bạn luôn chu đáo nhớ lịch deadline cho cả nhóm. Hôm nay hãy để mọi người chăm sóc và gửi tặng bạn những điều ngọt ngào nhất nha. Chúc bạn 20/10 ấm áp!",
-    ornament_type: "giftbox",
-    gift_hint: "Ly giữ nhiệt khắc tên GDGoC HUST",
-    has_written_wish: true,
-    assigned_girl_id: "girl_2",
-    assigned_girl_name: "Thu Hà",
-  },
-  {
-    id: "boy_3",
-    group_id: "grp_hust",
-    name: "Quang Khải",
-    email: "quangkhai@hust.edu.vn",
-    token: "quangkhai_2010",
-    secret_code: "DAO",
-    description: "Bạn nam hay mang theo bình nước màu xanh mint trà đào, nụ cười rất duyên.",
-    personal_wish: "Chúc bạn 20/10 ngập tràn niềm vui! Bạn luôn rất giỏi giang, nhiệt huyết và đáng yêu trong mắt mọi người.",
-    ornament_type: "peach",
-    gift_hint: "Hộp bánh quy bơ nướng hạnh nhân thơm ngon",
-    has_written_wish: true,
-    assigned_girl_id: "girl_3",
-    assigned_girl_name: "Phương Thảo",
-  },
-  {
-    id: "boy_4",
-    group_id: "grp_hust",
-    name: "Tuấn Kiệt",
-    email: "tuankiet@hust.edu.vn",
-    token: "tuankiet_2010",
-    secret_code: "LAN",
-    description: "Bạn nam có giọng nói trầm ấm, hay ngồi ở sảnh nhà C7, tay hay gõ phím cơ switch êm.",
-    personal_wish: "Chúc các bạn nữ luôn giữ vững ngọn lửa đam mê công nghệ, tự tin tỏa sáng và luôn được trân quý mỗi ngày.",
-    ornament_type: "snowglobe",
-    gift_hint: "Một chậu sen đá mini để bàn làm việc",
-    has_written_wish: true,
-    assigned_girl_id: "girl_1",
-    assigned_girl_name: "Lan Chi",
-  },
 ];
 
-const DEFAULT_GIRLS: Girl[] = [
+const TEST_GIRLS_FIXTURE: Girl[] = [
   {
     id: "girl_1",
     group_id: "grp_hust",
@@ -111,107 +68,21 @@ const DEFAULT_GIRLS: Girl[] = [
     assigned_boy_id: "boy_1",
     assigned_boy_name: "Minh Anh",
   },
-  {
-    id: "girl_2",
-    group_id: "grp_hust",
-    name: "Thu Hà",
-    email: "thuha.gdg@gmail.com",
-    token: "thuha_2010",
-    current_question_index: 0,
-    wrong_attempts: 0,
-    stage: "not_started",
-    unlocked_codes: [],
-    assigned_boy_id: "boy_2",
-    assigned_boy_name: "Đức Huy",
-  },
-  {
-    id: "girl_3",
-    group_id: "grp_hust",
-    name: "Phương Thảo",
-    email: "phuongthao.sis@hust.edu.vn",
-    token: "thao_hust",
-    current_question_index: 0,
-    wrong_attempts: 0,
-    stage: "not_started",
-    unlocked_codes: [],
-    assigned_boy_id: "boy_3",
-    assigned_boy_name: "Quang Khải",
-  },
 ];
 
-const DEFAULT_QUESTIONS: Question[] = [
+const TEST_QUESTIONS_FIXTURE: Question[] = [
   {
     id: "q_1",
     group_id: "grp_hust",
     boy_id: "boy_1",
     question_type: "multiple_choice",
-    text: "Trên fanpage GDG on Campus HUST, sự kiện công nghệ thường niên quy mô lớn nhất vào mỗi dịp mùa thu được cộng đồng mong đợi nhất có tên là gì?",
+    text: "Ngày Phụ nữ Việt Nam 20/10 tôn vinh ai?",
     options: [
-      { key: "a", label: "DevFest Hanoi / DevFest HUST" },
-      { key: "b", label: "Google I/O Extended HUST" },
-      { key: "c", label: "TechCamp Bách Khoa" },
-      { key: "d", label: "HUST Hackathon Autumn" },
+      { key: "a", label: "Những người phụ nữ Việt Nam tuyệt vời" },
+      { key: "b", label: "Phương án khác" },
     ],
     correct_key: "a",
-    clue: "Gợi ý: Bạn Minh Anh Core Team Tech, đeo kính gọng đen, hay mặc áo khoác nỉ xám, ngồi bàn 3 tầng 2 Thư viện Tạ Quang Bửu.",
-  },
-  {
-    id: "q_2",
-    group_id: "grp_hust",
-    boy_id: "boy_2",
-    question_type: "multiple_choice",
-    text: "Cuộc thi lập trình toàn cầu thường niên do Google tổ chức dành cho sinh viên nhằm giải quyết 17 Mục tiêu Phát triển Bền vững của Liên Hợp Quốc mà CLB phát động là gì?",
-    options: [
-      { key: "a", label: "Google Summer of Code" },
-      { key: "b", label: "Google Solution Challenge" },
-      { key: "c", label: "Google Code Jam" },
-      { key: "d", label: "Google Kick Start" },
-    ],
-    correct_key: "b",
-    clue: "Gợi ý: Bạn Đức Huy dáng người cao ráo, đeo đồng hồ thông minh màu cam, balo có móc khóa GDG HUST.",
-  },
-  {
-    id: "q_3",
-    group_id: "grp_hust",
-    boy_id: "boy_3",
-    question_type: "multiple_choice",
-    text: "Trước khi đổi nhận diện thương hiệu theo chuẩn Google toàn cầu vào năm 2024, câu lạc bộ trên Facebook từng có tên gọi quen thuộc là gì?",
-    options: [
-      { key: "a", label: "GDSC HUST (Google Developer Student Clubs - HUST)" },
-      { key: "b", label: "Google Club Bách Khoa" },
-      { key: "c", label: "Student Developer Hub HUST" },
-      { key: "d", label: "Google Tech Association HUST" },
-    ],
-    correct_key: "a",
-    clue: "Gợi ý: Bạn Quang Khải hay mang bình nước màu xanh mint trà đào, nụ cười rất tươi và có duyên.",
-  },
-  {
-    id: "q_4",
-    group_id: "grp_hust",
-    boy_id: "boy_4",
-    question_type: "multiple_choice",
-    text: "Khẩu hiệu (motto) quen thuộc xuất hiện trong các bài đăng truyền cảm hứng của GDG on Campus HUST thể hiện tinh thần đồng đội cùng tiến bước là gì?",
-    options: [
-      { key: "a", label: "Together we grow - Build good things together" },
-      { key: "b", label: "Code your dream, change your world" },
-      { key: "c", label: "Move fast and break things" },
-      { key: "d", label: "Think different, do better" },
-    ],
-    correct_key: "a",
-    clue: "Gợi ý: Bạn Tuấn Kiệt có giọng nói trầm ấm, hay ngồi ở sảnh nhà C7 với chiếc bàn phím cơ gõ êm.",
-  },
-  {
-    id: "q_5",
-    group_id: "grp_hust",
-    boy_id: "boy_1",
-    question_type: "boolean",
-    text: "GDG on Campus HUST là cộng đồng sinh viên công nghệ được thành lập và hoạt động dưới sự bảo trợ của Google Developers tại Đại học Bách Khoa Hà Nội, đúng hay sai?",
-    options: [
-      { key: "a", label: "Đúng (Chính xác)" },
-      { key: "b", label: "Sai" },
-    ],
-    correct_key: "a",
-    clue: "Gợi ý: Hãy tìm gặp các bạn nam Core Team để cùng chia sẻ niềm vui 20/10 và nhận mã bí mật nhé!",
+    clue: "Gợi ý: Tìm gặp các bạn nam để cùng nhận mã bí mật nhé!",
   },
 ];
 
@@ -227,17 +98,100 @@ export class AppDatabaseService {
   private isMemoryOnly: boolean;
   private enableSupabase: boolean;
   private sessionUnlockedCodes: Set<string>;
+  private listeners: Set<() => void> = new Set();
+  private realtimeChannel: any = null;
+  private syncTimer: any = null;
 
   constructor(options?: AppDatabaseOptions) {
-    this.storageKey = options?.storageKey || "bloom_2010_database_v8";
+    this.storageKey = options?.storageKey || "bloom_2010_database_realtime_v1";
     this.isMemoryOnly = Boolean(options?.isMemoryOnly);
     this.enableSupabase = Boolean(options?.enableSupabase);
     this.sessionUnlockedCodes = this.loadSessionUnlockedCodes();
     this.state = this.loadFromStorage();
 
-    if (this.enableSupabase && supabase.isConfigured()) {
-      this.syncFromSupabase();
+    if (this.enableSupabase && !this.isMemoryOnly) {
+      this.initRealtime();
     }
+  }
+
+  public subscribe(fn: () => void): () => void {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
+  }
+
+  public notifyListeners(): void {
+    this.listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (err) {
+        console.error("[AppDatabase] Listener error:", err);
+      }
+    });
+  }
+
+  private initRealtime(): void {
+    if (typeof window === "undefined") return;
+
+    // Initial fetch from Supabase
+    this.syncFromSupabase();
+
+    // Subscribe to Postgres Realtime changes across all clients
+    try {
+      if (supabase.isConfigured()) {
+        this.realtimeChannel = supabase.client
+          .channel("bloom_realtime_sync")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "boys" },
+            () => {
+              this.syncFromSupabase();
+            }
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "girls" },
+            () => {
+              this.syncFromSupabase();
+            }
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "groups" },
+            () => {
+              this.syncFromSupabase();
+            }
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "questions" },
+            () => {
+              this.syncFromSupabase();
+            }
+          )
+          .subscribe();
+      }
+    } catch (err) {
+      console.warn("[AppDatabase] Realtime subscription init error:", err);
+    }
+
+    // Polling fallback every 4.5s so cross-device sync is guaranteed even without web sockets
+    this.syncTimer = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        this.syncFromSupabase();
+      }
+    }, 4500);
+  }
+
+  public destroy(): void {
+    if (this.syncTimer) clearInterval(this.syncTimer);
+    if (this.realtimeChannel && supabase.client) {
+      try {
+        supabase.client.removeChannel(this.realtimeChannel);
+      } catch (err) {
+        void err;
+      }
+    }
+    this.listeners.clear();
   }
 
   private loadSessionUnlockedCodes(): Set<string> {
@@ -251,8 +205,8 @@ export class AppDatabaseService {
           parsed.forEach((c) => set.add(String(c).trim().toUpperCase()));
         }
       }
-    } catch (e) {
-      void e;
+    } catch {
+      // ignore
     }
     return set;
   }
@@ -264,57 +218,72 @@ export class AppDatabaseService {
         "bloom_session_unlocked_codes",
         JSON.stringify(Array.from(this.sessionUnlockedCodes))
       );
-    } catch (e) {
-      void e;
+    } catch {
+      // ignore
     }
   }
 
   private loadFromStorage(): DatabaseState {
-    if (this.isMemoryOnly || typeof localStorage === "undefined") {
+    if (this.isMemoryOnly) {
       return {
         groups: JSON.parse(JSON.stringify(DEFAULT_GROUPS)),
-        boys: JSON.parse(JSON.stringify(DEFAULT_BOYS)),
-        girls: JSON.parse(JSON.stringify(DEFAULT_GIRLS)),
-        questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+        boys: JSON.parse(JSON.stringify(TEST_BOYS_FIXTURE)),
+        girls: JSON.parse(JSON.stringify(TEST_GIRLS_FIXTURE)),
+        questions: JSON.parse(JSON.stringify(TEST_QUESTIONS_FIXTURE)),
       };
     }
+
+    if (typeof localStorage === "undefined") {
+      return {
+        groups: JSON.parse(JSON.stringify(DEFAULT_GROUPS)),
+        boys: [],
+        girls: [],
+        questions: [],
+      };
+    }
+
     try {
       const raw = localStorage.getItem(this.storageKey);
       if (!raw) {
         return {
           groups: JSON.parse(JSON.stringify(DEFAULT_GROUPS)),
-          boys: JSON.parse(JSON.stringify(DEFAULT_BOYS)),
-          girls: JSON.parse(JSON.stringify(DEFAULT_GIRLS)),
-          questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+          boys: [],
+          girls: [],
+          questions: [],
         };
       }
       const parsed = JSON.parse(raw) as DatabaseState;
-      if (!parsed.boys || parsed.boys.length === 0) {
-        parsed.boys = JSON.parse(JSON.stringify(DEFAULT_BOYS));
-      }
-      if (!parsed.groups || parsed.groups.length === 0) {
-        parsed.groups = JSON.parse(JSON.stringify(DEFAULT_GROUPS));
-      }
-      if (!parsed.girls || parsed.girls.length === 0) {
-        parsed.girls = JSON.parse(JSON.stringify(DEFAULT_GIRLS));
-      }
-      if (!parsed.questions || parsed.questions.length === 0) {
-        parsed.questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
-      }
-      return parsed;
+      // Filter out legacy demo items if present from old builds
+      const cleanBoys = (parsed.boys || []).filter(
+        (b) => !["demo_1", "demo_2", "boy_1", "boy_2", "boy_3", "boy_4"].includes(b.id)
+      );
+      const cleanGirls = (parsed.girls || []).filter(
+        (g) => !["demo_1", "girl_1", "girl_2", "girl_3"].includes(g.id)
+      );
+
+      return {
+        groups: parsed.groups && parsed.groups.length > 0 ? parsed.groups : JSON.parse(JSON.stringify(DEFAULT_GROUPS)),
+        boys: cleanBoys,
+        girls: cleanGirls,
+        questions: parsed.questions || [],
+      };
     } catch {
       return {
         groups: JSON.parse(JSON.stringify(DEFAULT_GROUPS)),
-        boys: JSON.parse(JSON.stringify(DEFAULT_BOYS)),
-        girls: JSON.parse(JSON.stringify(DEFAULT_GIRLS)),
-        questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+        boys: [],
+        girls: [],
+        questions: [],
       };
     }
   }
 
   public saveToStorage(): void {
     if (this.isMemoryOnly || typeof localStorage === "undefined") return;
-    localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+    } catch {
+      // ignore
+    }
   }
 
   public async syncFromSupabase(): Promise<boolean> {
@@ -329,25 +298,43 @@ export class AppDatabaseService {
       ]);
 
       let changed = false;
-      if (remoteGroups && remoteGroups.length > 0) {
-        this.state.groups = remoteGroups;
-        changed = true;
+
+      if (Array.isArray(remoteGroups)) {
+        if (remoteGroups.length > 0) {
+          if (JSON.stringify(this.state.groups) !== JSON.stringify(remoteGroups)) {
+            this.state.groups = remoteGroups;
+            changed = true;
+          }
+        } else {
+          // Initialize default group on remote if none exists
+          supabase.insert<Group>("groups", DEFAULT_GROUPS[0]).catch(() => {});
+        }
       }
-      if (remoteBoys && remoteBoys.length > 0) {
-        this.state.boys = remoteBoys;
-        changed = true;
+
+      if (Array.isArray(remoteBoys)) {
+        if (JSON.stringify(this.state.boys) !== JSON.stringify(remoteBoys)) {
+          this.state.boys = remoteBoys;
+          changed = true;
+        }
       }
-      if (remoteGirls && remoteGirls.length > 0) {
-        this.state.girls = remoteGirls;
-        changed = true;
+
+      if (Array.isArray(remoteGirls)) {
+        if (JSON.stringify(this.state.girls) !== JSON.stringify(remoteGirls)) {
+          this.state.girls = remoteGirls;
+          changed = true;
+        }
       }
-      if (remoteQuestions && remoteQuestions.length > 0) {
-        this.state.questions = remoteQuestions;
-        changed = true;
+
+      if (Array.isArray(remoteQuestions)) {
+        if (JSON.stringify(this.state.questions) !== JSON.stringify(remoteQuestions)) {
+          this.state.questions = remoteQuestions;
+          changed = true;
+        }
       }
 
       if (changed) {
         this.saveToStorage();
+        this.notifyListeners();
       }
       return true;
     } catch (err) {
@@ -371,24 +358,24 @@ export class AppDatabaseService {
     if (!clean) return null;
     return (
       this.state.boys.find(
-        (b) => (b.token && b.token === clean) || b.id === clean
+        (b) =>
+          b.token === clean ||
+          b.id === clean ||
+          (b.secret_code && b.secret_code.toUpperCase() === clean.toUpperCase())
       ) || null
     );
   }
 
-  public getOrCreateGirl(token: string, fallbackName?: string): Girl {
-    const clean = token.trim();
-    const existing = this.getGirlByToken(clean);
+  public getOrCreateGirl(token: string, name?: string): Girl {
+    const existing = this.getGirlByToken(token);
     if (existing) return existing;
 
-    const group = this.state.groups[0];
-    const name = fallbackName || (clean.toUpperCase() === "GDGOC2010" ? "Bạn Nữ GDGoC" : `Bạn Nữ (${clean})`);
+    const group = this.state.groups[0] || DEFAULT_GROUPS[0];
     const newGirl: Girl = {
       id: `girl_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      group_id: group ? group.id : "grp_hust",
-      name,
-      email: "",
-      token: clean,
+      group_id: group.id,
+      name: name || `Bạn Nữ (${token.slice(0, 6)})`,
+      token: token.trim(),
       current_question_index: 0,
       wrong_attempts: 0,
       stage: "not_started",
@@ -396,10 +383,12 @@ export class AppDatabaseService {
     };
     this.state.girls.push(newGirl);
     this.saveToStorage();
+    this.notifyListeners();
 
     if (this.isUsingSupabase()) {
-      supabase.insert<Girl>("girls", newGirl);
+      supabase.insert<Girl>("girls", newGirl).catch(() => {});
     }
+
     return newGirl;
   }
 
@@ -434,20 +423,21 @@ export class AppDatabaseService {
       throw new Error("Không tìm thấy câu hỏi này");
     }
 
-    const isCorrect = pickedKey.toLowerCase() === question.correct_key.toLowerCase();
+    const isCorrect = question.correct_key === pickedKey;
 
     if (isCorrect) {
-      girl.wrong_attempts = 0;
       const nextIndex = questionIndex + 1;
-      const completed = nextIndex >= questions.length;
+      const isCompleted = nextIndex >= questions.length;
+
       girl.current_question_index = nextIndex;
-      if (completed) {
-        girl.stage = "completed";
+      girl.wrong_attempts = 0;
+      girl.stage = isCompleted ? "completed" : "quiz";
+      if (isCompleted && !girl.completed_at) {
         girl.completed_at = new Date().toISOString();
-      } else {
-        girl.stage = "quiz";
       }
+
       this.saveToStorage();
+      this.notifyListeners();
 
       if (this.isUsingSupabase()) {
         supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
@@ -455,7 +445,7 @@ export class AppDatabaseService {
           wrong_attempts: 0,
           stage: girl.stage,
           completed_at: girl.completed_at,
-        });
+        }).catch(() => {});
       }
 
       return {
@@ -463,106 +453,86 @@ export class AppDatabaseService {
         wrong_attempts: 0,
         reveal: false,
         nextIndex,
-        completed,
+        completed: isCompleted,
         clue: question.clue,
-        girl: { ...girl },
+        girl,
       };
     } else {
-      girl.wrong_attempts += 1;
-      const reveal = girl.wrong_attempts >= 2;
+      const newWrong = (girl.wrong_attempts || 0) + 1;
+      girl.wrong_attempts = newWrong;
+      girl.stage = "quiz";
       this.saveToStorage();
+      this.notifyListeners();
 
       if (this.isUsingSupabase()) {
         supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-          wrong_attempts: girl.wrong_attempts,
-        });
+          wrong_attempts: newWrong,
+          stage: "quiz",
+        }).catch(() => {});
       }
 
       return {
         correct: false,
-        wrong_attempts: girl.wrong_attempts,
-        reveal,
+        wrong_attempts: newWrong,
+        reveal: newWrong >= 2,
         nextIndex: questionIndex,
         completed: false,
-        clue: reveal ? question.clue : undefined,
-        girl: { ...girl },
+        clue: newWrong >= 2 ? question.clue : undefined,
+        girl,
       };
     }
   }
 
-  public advanceAfterReveal(token: string, questionIndex: number): {
-    nextIndex: number;
-    completed: boolean;
-    girl: Girl;
-  } {
+  public resetGirlProgress(token: string): Girl | null {
     const girl = this.getGirlByToken(token);
-    if (!girl) throw new Error("Không tìm thấy bạn nữ");
+    if (!girl) return null;
 
-    const questions = this.getQuestionsForGirl(girl);
+    girl.current_question_index = 0;
     girl.wrong_attempts = 0;
-    const nextIndex = questionIndex + 1;
-    const completed = nextIndex >= questions.length;
-    girl.current_question_index = nextIndex;
-    if (completed) {
-      girl.stage = "completed";
-      girl.completed_at = new Date().toISOString();
-    }
+    girl.stage = "not_started";
+    girl.completed_at = undefined;
     this.saveToStorage();
+    this.notifyListeners();
 
     if (this.isUsingSupabase()) {
       supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-        current_question_index: girl.current_question_index,
+        current_question_index: 0,
+        wrong_attempts: 0,
+        stage: "not_started",
+        completed_at: null as any,
+      }).catch(() => {});
+    }
+
+    return girl;
+  }
+
+  public advanceAfterReveal(
+    token: string,
+    questionIndex: number
+  ): { nextIndex: number; completed: boolean; girl: Girl } {
+    const girl = this.getGirlByToken(token);
+    if (!girl) throw new Error("Girl not found");
+    const questions = this.getQuestionsForGirl(girl);
+    const nextIndex = questionIndex + 1;
+    const isCompleted = nextIndex >= questions.length;
+
+    girl.current_question_index = nextIndex;
+    girl.wrong_attempts = 0;
+    girl.stage = isCompleted ? "completed" : "quiz";
+    if (isCompleted && !girl.completed_at) {
+      girl.completed_at = new Date().toISOString();
+    }
+    this.saveToStorage();
+    this.notifyListeners();
+    if (this.isUsingSupabase()) {
+      supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
+        current_question_index: nextIndex,
         wrong_attempts: 0,
         stage: girl.stage,
         completed_at: girl.completed_at,
-      });
+      }).catch(() => {});
     }
-
-    return { nextIndex, completed, girl: { ...girl } };
-  }
-
-  public loginBoy(accessCode: string): {
-    success: boolean;
-    group?: Group;
-    boys?: Boy[];
-    assignedGirls?: Girl[];
-  } {
-    const clean = accessCode.trim().toUpperCase();
-    const group = this.state.groups.find(
-      (g) => g.group_access_code.toUpperCase() === clean
-    );
-    if (!group) return { success: false };
-
-    const boys = this.state.boys.filter((b) => b.group_id === group.id);
-    const assignedGirls = this.state.girls.filter((g) => g.group_id === group.id);
-    return { success: true, group, boys, assignedGirls };
-  }
-
-  public updateBoyWish(
-    boyId: string,
-    personalWish: string,
-    ornamentType?: OrnamentType,
-    giftHint?: string
-  ): boolean {
-    const boy = this.state.boys.find((b) => b.id === boyId);
-    if (!boy) return false;
-
-    boy.personal_wish = personalWish.trim();
-    if (ornamentType) boy.ornament_type = ornamentType;
-    if (giftHint) boy.gift_hint = giftHint.trim();
-    boy.has_written_wish = true;
-    this.saveToStorage();
-
-    if (this.isUsingSupabase()) {
-      supabase.update<Boy>("boys", `id=eq.${boy.id}`, {
-        personal_wish: boy.personal_wish,
-        ornament_type: boy.ornament_type,
-        gift_hint: boy.gift_hint,
-        has_written_wish: true,
-      });
-    }
-
-    return true;
+    return { nextIndex, completed: isCompleted, girl };
   }
 
   public submitBoyWish(
@@ -570,20 +540,22 @@ export class AppDatabaseService {
     boyName: string,
     secretCode: string,
     wish: string,
-    ornamentType?: OrnamentType
+    ornamentType?: OrnamentType,
+    assignedGirlName?: string,
+    giftHint?: string
   ): { success: boolean; boy?: Boy; message?: string } {
     const cleanCode = accessCode.trim().toUpperCase();
     const cleanName = boyName.trim();
     const cleanSecret = secretCode.trim().toUpperCase();
 
     if (!cleanName) {
-      return { success: false, message: "Vui lòng nhập tên bạn nam nhé!" };
+      return { success: false, message: "Vui lòng nhập tên của bạn nhé!" };
     }
     if (!cleanSecret) {
-      return { success: false, message: "Vui lòng đặt mã bí mật để mở quà/thư nhé!" };
+      return { success: false, message: "Vui lòng đặt mã bí mật để bạn nữ mở thư!" };
     }
     if (!wish.trim()) {
-      return { success: false, message: "Vui lòng nhập lời chúc gửi bạn nữ nhé!" };
+      return { success: false, message: "Vui lòng nhập lời chúc gửi các bạn nữ!" };
     }
 
     let group = this.state.groups.find(
@@ -591,46 +563,52 @@ export class AppDatabaseService {
         g.group_access_code.toUpperCase() === cleanCode ||
         g.secret_code.toUpperCase() === cleanCode
     );
-    if (!group && (cleanCode === "GDGOC2010" || cleanCode === "2010" || cleanCode === "")) {
-      group = this.state.groups[0];
-    }
     if (!group) {
-      return {
-        success: false,
-        message: "Mã nhóm chưa đúng. Vui lòng kiểm tra lại mã truy cập nhóm nhé!",
-      };
+      group = this.state.groups[0] || DEFAULT_GROUPS[0];
+      if (!this.state.groups.some((g) => g.id === group!.id)) {
+        this.state.groups.push(group);
+      }
     }
 
     let boy = this.state.boys.find(
       (b) =>
-        b.group_id === group!.id &&
-        b.name.trim().toLowerCase() === cleanName.toLowerCase()
+        b.name.trim().toLowerCase() === cleanName.toLowerCase() ||
+        (cleanSecret && b.secret_code?.toUpperCase() === cleanSecret)
     );
 
     if (boy) {
       boy.secret_code = cleanSecret;
       boy.personal_wish = wish.trim();
       if (ornamentType) boy.ornament_type = ornamentType;
+      if (assignedGirlName) boy.assigned_girl_name = assignedGirlName.trim();
+      if (giftHint) boy.gift_hint = giftHint.trim();
       boy.has_written_wish = true;
     } else {
       boy = {
-        id: `boy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        id: `boy_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         group_id: group.id,
         name: cleanName,
         email: "",
+        token: `boy_${cleanName.toLowerCase().replace(/[^a-z0-9]/g, "")}_${Date.now().toString(36)}`,
         secret_code: cleanSecret,
-        description: `Bạn nam ${cleanName} gửi lời chúc 20/10.`,
+        description: giftHint?.trim() || `Bạn nam ${cleanName} gửi lời chúc 20/10.`,
         personal_wish: wish.trim(),
         ornament_type: ornamentType || "lotus",
+        gift_hint: giftHint?.trim() || "",
         has_written_wish: true,
+        assigned_girl_name: assignedGirlName?.trim() || "",
       };
       this.state.boys.push(boy);
     }
 
     this.saveToStorage();
+    this.notifyListeners();
 
     if (this.isUsingSupabase()) {
-      supabase.insert<Boy>("boys", boy);
+      // Ensure group exists then upsert boy
+      supabase.insert<Group>("groups", group).then(() => {
+        supabase.insert<Boy>("boys", boy!);
+      }).catch((err) => console.warn("[Supabase] submitBoyWish error:", err));
     }
 
     return { success: true, boy: { ...boy } };
@@ -670,7 +648,6 @@ export class AppDatabaseService {
       ? this.state.boys.filter((b) => b.group_id === group.id)
       : this.state.boys;
 
-    // Record in session unlocked codes for immediate and persistent session access
     this.sessionUnlockedCodes.add(clean);
     if (isGroupCode && group) {
       this.sessionUnlockedCodes.add(group.secret_code.toUpperCase());
@@ -689,11 +666,12 @@ export class AppDatabaseService {
         if (matchingBoy?.secret_code) unlocked.add(matchingBoy.secret_code.trim().toUpperCase());
         girl.unlocked_codes = [...unlocked];
         this.saveToStorage();
+        this.notifyListeners();
 
         if (this.isUsingSupabase()) {
           supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
             unlocked_codes: girl.unlocked_codes,
-          });
+          }).catch(() => {});
         }
       }
     }
@@ -752,55 +730,73 @@ export class AppDatabaseService {
   }
 
   public getState(): DatabaseState {
-    return this.state;
+    return {
+      groups: [...this.state.groups],
+      boys: [...this.state.boys],
+      girls: [...this.state.girls],
+      questions: [...this.state.questions],
+    };
   }
 
-  public addGroup(name: string, secretCode: string, accessCode: string, wishMessage: string): Group {
+  public addGroup(name: string, secretCode?: string, accessCode?: string, wishMessage?: string): Group {
     const group: Group = {
-      id: `grp_${Date.now()}`,
+      id: `grp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       group_name: name.trim(),
-      secret_code: secretCode.trim().toUpperCase(),
-      group_access_code: accessCode.trim().toUpperCase(),
-      wish_message: wishMessage.trim(),
+      secret_code: (secretCode || "2010").trim().toUpperCase(),
+      group_access_code: (accessCode || `GDG${Date.now().toString().slice(-4)}`).trim().toUpperCase(),
+      wish_message: wishMessage || "Chúc toàn thể các bạn nữ 20/10 ngập tràn niềm vui!",
       created_at: new Date().toISOString(),
     };
     this.state.groups.push(group);
     this.saveToStorage();
+    this.notifyListeners();
 
     if (this.isUsingSupabase()) {
-      supabase.insert<Group>("groups", group);
+      supabase.insert<Group>("groups", group).catch(() => {});
     }
+
     return group;
   }
 
-  public addBoy(groupId: string, name: string, email: string, description: string, wish: string, gift: string): Boy {
+  public addBoy(
+    groupId: string,
+    name: string,
+    email?: string,
+    description?: string,
+    personalWish?: string,
+    giftHint?: string
+  ): Boy {
     const boy: Boy = {
-      id: `boy_${Date.now()}`,
+      id: `boy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       group_id: groupId,
       name: name.trim(),
-      email: email.trim(),
-      description: description.trim(),
-      personal_wish: wish.trim(),
-      gift_hint: gift.trim(),
+      email: email?.trim(),
+      token: `boy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      description: description?.trim() || `Bạn nam ${name} gửi gắm lời chúc 20/10.`,
+      personal_wish: personalWish?.trim() || "",
       ornament_type: "lotus",
-      has_written_wish: true,
+      gift_hint: giftHint?.trim(),
+      has_written_wish: Boolean(personalWish?.trim()),
     };
     this.state.boys.push(boy);
     this.saveToStorage();
+    this.notifyListeners();
 
     if (this.isUsingSupabase()) {
-      supabase.insert<Boy>("boys", boy);
+      supabase.insert<Boy>("boys", boy).catch(() => {});
     }
+
     return boy;
   }
 
-  public addGirl(groupId: string, name: string, email: string, token: string): Girl {
+  public addGirl(groupId: string, name: string, email?: string, customToken?: string): Girl {
+    const token = (customToken || `girl_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`).trim();
     const girl: Girl = {
-      id: `girl_${Date.now()}`,
+      id: `girl_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       group_id: groupId,
       name: name.trim(),
-      email: email.trim(),
-      token: token.trim(),
+      email: email?.trim(),
+      token,
       current_question_index: 0,
       wrong_attempts: 0,
       stage: "not_started",
@@ -808,96 +804,13 @@ export class AppDatabaseService {
     };
     this.state.girls.push(girl);
     this.saveToStorage();
+    this.notifyListeners();
 
     if (this.isUsingSupabase()) {
-      supabase.insert<Girl>("girls", girl);
+      supabase.insert<Girl>("girls", girl).catch(() => {});
     }
+
     return girl;
-  }
-
-  public addQuestion(groupId: string, text: string, options: { key: OptionKey; label: string }[], correctKey: OptionKey, clue: string): Question {
-    const question: Question = {
-      id: `q_${Date.now()}`,
-      group_id: groupId,
-      text: text.trim(),
-      options,
-      correct_key: correctKey,
-      clue: clue.trim(),
-    };
-    this.state.questions.push(question);
-    this.saveToStorage();
-
-    if (this.isUsingSupabase()) {
-      supabase.insert<Question>("questions", question);
-    }
-    return question;
-  }
-
-  public resetGirlProgress(token: string): boolean {
-    const girl = this.getGirlByToken(token);
-    if (!girl) return false;
-    girl.current_question_index = 0;
-    girl.wrong_attempts = 0;
-    girl.stage = "not_started";
-    girl.unlocked_codes = [];
-    delete girl.completed_at;
-    this.saveToStorage();
-
-    if (this.isUsingSupabase()) {
-      supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-        current_question_index: 0,
-        wrong_attempts: 0,
-        stage: "not_started",
-        unlocked_codes: [],
-        completed_at: undefined,
-      });
-    }
-    return true;
-  }
-
-  public completeGirlQuiz(token: string): boolean {
-    const girl = this.getGirlByToken(token);
-    if (!girl) return false;
-    const questions = this.getQuestionsForGirl(girl);
-    girl.current_question_index = questions.length;
-    girl.wrong_attempts = 0;
-    girl.stage = "completed";
-    girl.completed_at = new Date().toISOString();
-    this.saveToStorage();
-
-    if (this.isUsingSupabase()) {
-      supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-        current_question_index: questions.length,
-        wrong_attempts: 0,
-        stage: "completed",
-        completed_at: girl.completed_at,
-      });
-    }
-    return true;
-  }
-
-  public setGirlUnlocked(token: string, secretCode: string, unlocked: boolean): boolean {
-    const girl = this.getGirlByToken(token);
-    if (!girl) return false;
-    const clean = secretCode.trim().toUpperCase();
-    const current = new Set(girl.unlocked_codes || []);
-    if (unlocked) {
-      current.add(clean);
-      this.sessionUnlockedCodes.add(clean);
-    } else {
-      current.delete(clean);
-      this.sessionUnlockedCodes.delete(clean);
-    }
-    girl.unlocked_codes = [...current];
-    this.saveSessionUnlockedCodes();
-    this.saveToStorage();
-
-    if (this.isUsingSupabase()) {
-      supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-        unlocked_codes: girl.unlocked_codes,
-      });
-    }
-    return true;
   }
 
   public assignBoyToGirl(boyId: string, girlId: string): boolean {
@@ -911,57 +824,60 @@ export class AppDatabaseService {
     girl.assigned_boy_name = boy.name;
 
     this.saveToStorage();
+    this.notifyListeners();
+
     if (this.isUsingSupabase()) {
       supabase.update<Boy>("boys", `id=eq.${boy.id}`, {
         assigned_girl_id: boy.assigned_girl_id,
         assigned_girl_name: boy.assigned_girl_name,
-      });
+      }).catch(() => {});
       supabase.update<Girl>("girls", `id=eq.${girl.id}`, {
         assigned_boy_id: girl.assigned_boy_id,
         assigned_boy_name: girl.assigned_boy_name,
-      });
+      }).catch(() => {});
     }
     return true;
   }
 
-  public generateEmailPreview(
-    type: "girl" | "boy",
-    recipientId: string,
-    baseUrl?: string
-  ): EmailPreviewData | null {
-    if (type === "girl") {
-      const girl = this.state.girls.find(
-        (g) => g.id === recipientId || g.token === recipientId
-      );
-      if (!girl) return null;
-      const group = this.state.groups.find((grp) => grp.id === girl.group_id);
-      return generateGirlInvitationEmail(girl, group, baseUrl);
-    } else {
-      const boy = this.state.boys.find(
-        (b) => b.id === recipientId || b.token === recipientId
-      );
-      if (!boy) return null;
-      const group = this.state.groups.find((grp) => grp.id === boy.group_id);
-      return generateBoyInvitationEmail(boy, group, baseUrl);
+  public addQuestion(
+    groupId: string,
+    text: string,
+    options: { key: OptionKey; label: string }[],
+    correctKey: OptionKey,
+    clue?: string
+  ): Question {
+    const question: Question = {
+      id: `q_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      group_id: groupId,
+      question_type: "multiple_choice",
+      text: text.trim(),
+      options,
+      correct_key: correctKey,
+      clue: clue?.trim() || "Gợi ý: Tìm bạn nam để nhận mã bí mật nhé!",
+    };
+    this.state.questions.push(question);
+    this.saveToStorage();
+    this.notifyListeners();
+
+    if (this.isUsingSupabase()) {
+      supabase.insert<Question>("questions", question).catch(() => {});
     }
+
+    return question;
   }
 
-  public exportEmailList(baseUrl?: string): EmailExportItem[] {
-    return exportAllRecipientsToJSON(
-      this.state.boys,
-      this.state.girls,
-      this.state.groups,
-      baseUrl
-    );
-  }
-
-  public exportEmailCSV(baseUrl?: string): string {
-    return exportAllRecipientsToCSV(
-      this.state.boys,
-      this.state.girls,
-      this.state.groups,
-      baseUrl
-    );
+  public deleteBoy(boyId: string): boolean {
+    const initialLen = this.state.boys.length;
+    this.state.boys = this.state.boys.filter((b) => b.id !== boyId);
+    if (this.state.boys.length !== initialLen) {
+      this.saveToStorage();
+      this.notifyListeners();
+      if (this.isUsingSupabase()) {
+        supabase.delete("boys", `id=eq.${boyId}`).catch(() => {});
+      }
+      return true;
+    }
+    return false;
   }
 
   public deleteGirl(girlId: string): boolean {
@@ -969,8 +885,9 @@ export class AppDatabaseService {
     this.state.girls = this.state.girls.filter((g) => g.id !== girlId);
     if (this.state.girls.length !== initialLen) {
       this.saveToStorage();
+      this.notifyListeners();
       if (this.isUsingSupabase()) {
-        supabase.delete("girls", `id=eq.${girlId}`);
+        supabase.delete("girls", `id=eq.${girlId}`).catch(() => {});
       }
       return true;
     }
@@ -982,8 +899,9 @@ export class AppDatabaseService {
     this.state.questions = this.state.questions.filter((q) => q.id !== questionId);
     if (this.state.questions.length !== initialLen) {
       this.saveToStorage();
+      this.notifyListeners();
       if (this.isUsingSupabase()) {
-        supabase.delete("questions", `id=eq.${questionId}`);
+        supabase.delete("questions", `id=eq.${questionId}`).catch(() => {});
       }
       return true;
     }
@@ -995,27 +913,96 @@ export class AppDatabaseService {
     this.state.groups = this.state.groups.filter((g) => g.id !== groupId);
     if (this.state.groups.length !== initialLen) {
       this.saveToStorage();
+      this.notifyListeners();
       if (this.isUsingSupabase()) {
-        supabase.delete("groups", `id=eq.${groupId}`);
+        supabase.delete("groups", `id=eq.${groupId}`).catch(() => {});
       }
       return true;
     }
     return false;
   }
 
+  public updateBoyWish(
+    boyId: string,
+    secretCode: string,
+    personalWish: string,
+    ornamentType?: OrnamentType,
+    giftHint?: string
+  ): boolean {
+    const boy = this.state.boys.find((b) => b.id === boyId);
+    if (!boy) return false;
+
+    boy.secret_code = secretCode.trim().toUpperCase();
+    boy.personal_wish = personalWish.trim();
+    if (ornamentType) boy.ornament_type = ornamentType;
+    if (giftHint) boy.gift_hint = giftHint.trim();
+    boy.has_written_wish = true;
+    this.saveToStorage();
+    this.notifyListeners();
+
+    if (this.isUsingSupabase()) {
+      supabase.update<Boy>("boys", `id=eq.${boy.id}`, {
+        secret_code: boy.secret_code,
+        personal_wish: boy.personal_wish,
+        ornament_type: boy.ornament_type,
+        gift_hint: boy.gift_hint,
+        has_written_wish: true,
+      }).catch(() => {});
+    }
+
+    return true;
+  }
+
   public resetDatabase(): void {
     this.state = {
       groups: JSON.parse(JSON.stringify(DEFAULT_GROUPS)),
-      boys: JSON.parse(JSON.stringify(DEFAULT_BOYS)),
-      girls: JSON.parse(JSON.stringify(DEFAULT_GIRLS)),
-      questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+      boys: [],
+      girls: [],
+      questions: [],
     };
     this.saveToStorage();
+    this.notifyListeners();
+  }
+
+  public getEmailPreviewForGirl(girlToken: string, baseUrl?: string): EmailPreviewData | null {
+    const girl = this.getGirlByToken(girlToken);
+    if (!girl) return null;
+    const group = this.state.groups.find((g) => g.id === girl.group_id) || this.state.groups[0];
+    return generateGirlInvitationEmail(girl, group, baseUrl);
+  }
+
+  public getEmailPreviewForBoy(boyToken: string, baseUrl?: string): EmailPreviewData | null {
+    const boy = this.getBoyByToken(boyToken);
+    if (!boy) return null;
+    const group = this.state.groups.find((g) => g.id === boy.group_id) || this.state.groups[0];
+    return generateBoyInvitationEmail(boy, group, baseUrl);
+  }
+
+  public exportRecipientsCSV(baseUrl?: string): string {
+    return exportAllRecipientsToCSV(
+      this.state.boys,
+      this.state.girls,
+      this.state.groups,
+      baseUrl
+    );
+  }
+
+  public exportEmailCSV(baseUrl?: string): string {
+    return this.exportRecipientsCSV(baseUrl);
+  }
+
+  public exportRecipientsJSON(baseUrl?: string): EmailExportItem[] {
+    return exportAllRecipientsToJSON(
+      this.state.boys,
+      this.state.girls,
+      this.state.groups,
+      baseUrl
+    );
   }
 }
 
 export const dbService = new AppDatabaseService({
-  storageKey: "bloom_2010_database_main",
+  storageKey: "bloom_2010_database_realtime_v1",
   enableSupabase: true,
   isMemoryOnly: false,
 });

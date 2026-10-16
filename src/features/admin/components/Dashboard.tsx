@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { dbService } from "@/services/app-database";
 import { supabase } from "@/services/supabase";
@@ -17,6 +17,13 @@ export function Dashboard() {
   const [activeTab, setActiveTab] = useState<"groups" | "boys" | "girls" | "questions" | "links">("groups");
   const [state, setState] = useState(() => dbService.getState());
   const [notification, setNotification] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = dbService.subscribe(() => {
+      setState(dbService.getState());
+    });
+    return unsubscribe;
+  }, []);
 
   const [groupName, setGroupName] = useState("");
   const [secretCode, setSecretCode] = useState("");

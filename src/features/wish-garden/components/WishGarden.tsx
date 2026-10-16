@@ -52,7 +52,11 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
 
   useEffect(() => {
     refreshTree();
-  }, [refreshTree]);
+    const unsubscribe = activeDb.subscribe(() => {
+      refreshTree();
+    });
+    return unsubscribe;
+  }, [refreshTree, activeDb]);
 
   function handleUnlockSuccess(group: Group, _boys: Boy[], unlockedBoy?: Boy) {
     refreshTree();
