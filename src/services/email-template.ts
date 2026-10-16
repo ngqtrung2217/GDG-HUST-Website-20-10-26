@@ -42,7 +42,7 @@ export function generateGirlInvitationEmail(
       </p>
 
       <div class="highlight-box">
-        <p><strong>🎯 Nhiệm vụ của bạn:</strong></p>
+        <p><strong>Nhiệm vụ của bạn:</strong></p>
         <p>1. Bấm vào nút bên dưới để giải 5 câu hỏi minigame thú vị.</p>
         <p>2. Thu thập manh mối nhận diện nhóm bạn nam ngoài đời.</p>
         <p>3. Tìm gặp bạn nam, nhận <strong>Secret Code</strong> để mở thư chúc và nhận quà tận tay!</p>
@@ -73,8 +73,8 @@ Chào ${girl.name},
 Nhân ngày Phụ nữ Việt Nam 20/10, các bạn nam CLB ${group?.group_name || "GDGoC HUST"} gửi tới bạn lời chúc ấm áp nhất!
 Hãy tham gia minigame để nhận manh mối đi tìm bạn nam và mở quà nhé:
 
-👉 Link minigame: ${actionUrl}
-👉 Mã tham gia: ${girl.token}
+- Link minigame: ${actionUrl}
+- Mã tham gia: ${girl.token}
 
 Chúc bạn một ngày 20/10 thật rạng rỡ và ngập tràn niềm vui!
 GDGoC HUST Team`;
@@ -97,7 +97,7 @@ export function generateBoyInvitationEmail(
 ): EmailPreviewData {
   const cleanBase = baseUrl.replace(/\/+$/, "");
   const actionUrl = `${cleanBase}/boy?token=${boy.token || boy.id}`;
-  const subject = `💌 [GDGoC HUST 20/10] Phân công gửi lời chúc 20/10 - Dành cho ${boy.name}`;
+  const subject = `[GDGoC HUST 20/10] Phân công gửi lời chúc 20/10 - Dành cho ${boy.name}`;
   const assignedGirl = boy.assigned_girl_name || "bạn nữ trong nhóm";
 
   const htmlContent = `<!DOCTYPE html>
@@ -123,7 +123,7 @@ export function generateBoyInvitationEmail(
   <div class="wrapper">
     <div class="card">
       <span class="badge">GDGoC HUST · Nhiệm Vụ 20/10</span>
-      <h1 class="title">Xin Chào ${boy.name}! 💐</h1>
+      <h1 class="title">Xin Chào ${boy.name}!</h1>
       <p class="subtitle">Chiến dịch 20/10: "A little code, a lot of appreciation."</p>
 
       <p style="font-size: 14px; color: #334155; text-align: left; line-height: 1.6;">
@@ -133,17 +133,17 @@ export function generateBoyInvitationEmail(
 
       <div class="assignment-box">
         <p style="margin: 4px 0; font-size: 13px;">🎁 <strong>Bạn nữ phụ trách nhận quà:</strong> <span style="color: #E11D48; font-weight: bold;">${assignedGirl}</span></p>
-        <p style="margin: 4px 0; font-size: 13px;">🔐 <strong>Mã bí mật cá nhân của bạn (Secret Code):</strong></p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Mã bí mật cá nhân của bạn (Secret Code):</strong></p>
         <div style="text-align: center; margin: 10px 0;">
           <div class="secret-code-pill">${boy.secret_code || "CHƯA ĐẶT"}</div>
         </div>
         <p style="margin: 4px 0; font-size: 12px; color: #64748B;">
-          ⚠️ <em>Hãy ghi nhớ mã này! Khi bạn nữ giải xong câu hỏi và đi tìm bạn ngoài đời, bạn hãy đọc mã này để bạn nữ nhập vào web mở thư và nhận quà nhé!</em>
+          <em>Lưu ý: Hãy ghi nhớ mã này! Khi bạn nữ giải xong câu hỏi và đi tìm bạn ngoài đời, bạn hãy đọc mã này để bạn nữ nhập vào web mở thư và nhận quà nhé!</em>
         </p>
       </div>
 
       <a href="${actionUrl}" class="btn" target="_blank">
-        ✍️ Mở Web Soạn Lời Chúc & Đổi Mã
+        Mở Web Soạn Lời Chúc & Đổi Mã
       </a>
 
       <p style="font-size: 12px; color: #64748B; margin-top: 14px;">
@@ -165,8 +165,8 @@ Chào ${boy.name},
 Bạn đã được phân công gửi lời chúc và trao quà cho: ${assignedGirl}!
 Mã bí mật của bạn (Secret Code): ${boy.secret_code || "CHƯA ĐẶT"}
 
-👉 Link mở trang soạn lời chúc: ${actionUrl}
-👉 Lưu ý: Giữ mã bí mật này để đọc cho bạn nữ khi gặp trực tiếp ngoài đời.
+- Link mở trang soạn lời chúc: ${actionUrl}
+- Lưu ý: Giữ mã bí mật này để đọc cho bạn nữ khi gặp trực tiếp ngoài đời.
 
 Chúc bạn và cả nhóm có một ngày 20/10 thật đáng nhớ!
 GDGoC HUST Team`;

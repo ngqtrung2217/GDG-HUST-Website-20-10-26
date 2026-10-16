@@ -56,142 +56,10 @@ export function Dashboard() {
   const [correctKey, setCorrectKey] = useState<OptionKey>("a");
   const [qClue, setQClue] = useState("");
 
-  // Supabase Configuration State
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
-  const [supabaseUrlInput, setSupabaseUrlInput] = useState(() => supabase.getConfig().url);
-  const [supabaseKeyInput, setSupabaseKeyInput] = useState(() => supabase.getConfig().anonKey);
-  const [supabaseStatus, setSupabaseStatus] = useState<string>("");
-  const [isTestingSupabase, setIsTestingSupabase] = useState(false);
-
   function notify(msg: string) {
     setNotification(msg);
     setState({ ...dbService.getState() });
     setTimeout(() => setNotification(""), 3500);
-  }
-
-  async function handleTestSupabase() {
-    setIsTestingSupabase(true);
-    setSupabaseStatus("Đang kiểm tra kết nối tới Supabase...");
-    supabase.setConfig(supabaseUrlInput, supabaseKeyInput);
-    const res = await supabase.testConnection();
-    setSupabaseStatus(res.message);
-    setIsTestingSupabase(false);
-  }
-
-  async function handleSaveSupabase(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    if (!supabaseUrlInput.trim() || !supabaseKeyInput.trim()) {
-      setSupabaseStatus("Vui lòng nhập đầy đủ Supabase URL và Anon Key!");
-      return;
-    }
-    supabase.setConfig(supabaseUrlInput, supabaseKeyInput);
-    notify("Đã lưu cấu hình Supabase! Đang đồng bộ...");
-    const synced = await dbService.syncFromSupabase();
-    if (synced) {
-      notify("Đồng bộ dữ liệu từ Supabase thành công!");
-    } else {
-      notify("Đã lưu cấu hình Supabase thành công!");
-    }
-    setIsSupabaseModalOpen(false);
-  }
-
-  function handleDisableSupabase() {
-    supabase.clearConfig();
-    setSupabaseUrlInput("");
-    setSupabaseKeyInput("");
-    setSupabaseStatus("Đã tắt Supabase, chuyển về chế độ Local.");
-    notify("Đã tắt kết nối Supabase, chuyển về bộ nhớ Local.");
-    setIsSupabaseModalOpen(false);
-  }
-
-  async function handlePushAllToSupabase() {
-    if (!supabase.isConfigured()) {
-      notify("Vui lòng cấu hình và lưu Supabase trước khi đẩy dữ liệu!");
-      return;
-    }
-    setSupabaseStatus("Đang đẩy toàn bộ dữ liệu lên Supabase...");
-    try {
-      const currentState = dbService.getState();
-      await Promise.all([
-        ...currentState.groups.map((g) => supabase.insert("groups", g)),
-        ...currentState.boys.map((b) => supabase.insert("boys", b)),
-        ...currentState.girls.map((g) => supabase.insert("girls", g)),
-        ...currentState.questions.map((q) => supabase.insert("questions", q)),
-      ]);
-      setSupabaseStatus("Đã đẩy toàn bộ danh sách lên Supabase thành công!");
-      notify("Đã tải toàn bộ nhóm, nam, nữ, câu hỏi lên Supabase thành công!");
-    } catch (err: any) {
-      setSupabaseStatus(`Lỗi khi đẩy dữ liệu: ${err.message || String(err)}`);
-    }
-  }
-
-  function handleCopySQLSchema() {
-    const sql = `-- GDGoC HUST 20/10 Database Schema
-CREATE TABLE IF NOT EXISTS groups (
-  id TEXT PRIMARY KEY,
-  group_name TEXT NOT NULL,
-  secret_code TEXT NOT NULL,
-  group_access_code TEXT NOT NULL,
-  wish_message TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS boys (
-  id TEXT PRIMARY KEY,
-  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  email TEXT,
-  token TEXT,
-  secret_code TEXT,
-  description TEXT,
-  personal_wish TEXT,
-  ornament_type TEXT DEFAULT 'lotus',
-  gift_hint TEXT,
-  has_written_wish BOOLEAN DEFAULT false,
-  assigned_girl_id TEXT,
-  assigned_girl_name TEXT
-);
-
-CREATE TABLE IF NOT EXISTS girls (
-  id TEXT PRIMARY KEY,
-  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  email TEXT,
-  token TEXT UNIQUE NOT NULL,
-  current_question_index INTEGER DEFAULT 0,
-  wrong_attempts INTEGER DEFAULT 0,
-  stage TEXT DEFAULT 'not_started',
-  completed_at TIMESTAMPTZ,
-  unlocked_codes JSONB DEFAULT '[]'::jsonb,
-  assigned_boy_id TEXT,
-  assigned_boy_name TEXT
-);
-
-CREATE TABLE IF NOT EXISTS questions (
-  id TEXT PRIMARY KEY,
-  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
-  boy_id TEXT,
-  question_type TEXT DEFAULT 'multiple_choice',
-  text TEXT NOT NULL,
-  options JSONB NOT NULL,
-  correct_key TEXT NOT NULL,
-  clue TEXT
-);
-
-ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE boys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE girls ENABLE ROW LEVEL SECURITY;
-ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public Read/Write groups" ON groups FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Public Read/Write boys" ON boys FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Public Read/Write girls" ON girls FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (true) WITH CHECK (true);
-`;
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(sql);
-      notify("Đã sao chép mã SQL schema! Hãy dán vào Supabase SQL Editor nhé!");
-    }
   }
 
   function handleAddGroup(e: React.FormEvent) {
@@ -379,23 +247,16 @@ CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setSupabaseUrlInput(supabase.getConfig().url);
-                setSupabaseKeyInput(supabase.getConfig().anonKey);
-                setSupabaseStatus("");
-                setIsSupabaseModalOpen(true);
-              }}
-              className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            <div
+              className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 select-none ${
                 supabase.isConfigured()
                   ? "bg-emerald-500/20 border-emerald-400 text-emerald-300"
-                  : "bg-amber-500/20 border-amber-400 text-amber-300"
+                  : "bg-white/10 border-white/20 text-white/50"
               }`}
             >
-              <span>{supabase.isConfigured() ? "🟢" : "🟡"}</span>
-              <span>{supabase.isConfigured() ? "Supabase: Đã Bật" : "Cấu Hình Supabase"}</span>
-            </button>
+              <span className={`size-2 rounded-full inline-block ${supabase.isConfigured() ? "bg-emerald-400" : "bg-slate-400"}`} />
+              <span>{supabase.isConfigured() ? "Supabase: Đã Kết Nối (Realtime)" : "Supabase: Chế độ Local"}</span>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -565,7 +426,7 @@ CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (
                   <input
                     type="text"
                     required
-                    placeholder="VD: Minh Anh"
+                    placeholder="Nhập họ và tên..."
                     value={boyName}
                     onChange={(e) => setBoyName(e.target.value)}
                     className="w-full h-10 px-3.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white focus:outline-none"
@@ -685,7 +546,7 @@ CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (
                 <input
                   type="text"
                   required
-                  placeholder="VD: Lan Chi"
+                  placeholder="Nhập họ và tên..."
                   value={girlName}
                   onChange={(e) => setGirlName(e.target.value)}
                   className="w-full h-10 px-3.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white focus:outline-none"
@@ -984,7 +845,7 @@ CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (
                   onClick={handleDownloadCSV}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
                 >
-                  <span>📥</span> Tải File CSV Gửi Thủ Công
+                  Tải File CSV Gửi Thủ Công
                 </button>
               </div>
 
@@ -1151,124 +1012,6 @@ CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (
           </div>
         )}
 
-        {isSupabaseModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto font-sans">
-            <div className="relative w-full max-w-[520px] rounded-3xl bg-[#1E243A] text-white p-6 sm:p-7 border border-white/20 shadow-2xl my-6 space-y-4">
-              <button
-                type="button"
-                onClick={() => setIsSupabaseModalOpen(false)}
-                className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-
-              <div>
-                <span className="text-[10px] font-bold text-pink-400 uppercase tracking-widest block">
-                  Cơ Sở Dữ Liệu Đám Mây · PostgreSQL
-                </span>
-                <h3 className="text-xl font-bold text-white mt-0.5 font-serif">
-                  Cấu Hình Supabase (GitHub Pages)
-                </h3>
-                <p className="text-xs text-white/60 mt-1">
-                  Đồng bộ hóa dữ liệu lời chúc và tiến độ sự kiện trực tuyến qua Supabase API.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-indigo-500/15 border border-indigo-400/25 text-[11px] text-indigo-200 space-y-1">
-                <span className="font-semibold block text-indigo-100">✨ Tự động hóa qua GitHub Actions:</span>
-                <p>
-                  Khi cấu hình Secrets trên GitHub (<code className="bg-black/30 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> và <code className="bg-black/30 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code>), keys sẽ được nạp tự động vào toàn bộ ứng dụng lúc build.
-                  <b className="text-white"> Tất cả bạn nữ và bạn nam khi mở link web đều tự động kết nối Supabase, không cần nhập key thủ công!</b>
-                </p>
-              </div>
-
-              {supabaseStatus && (
-                <div className="p-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-pink-200">
-                  {supabaseStatus}
-                </div>
-              )}
-
-              <form onSubmit={handleSaveSupabase} className="space-y-3.5">
-                <div>
-                  <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
-                    Supabase Project URL *
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    placeholder="https://xyzproject.supabase.co"
-                    value={supabaseUrlInput}
-                    onChange={(e) => setSupabaseUrlInput(e.target.value)}
-                    className="w-full h-10 px-3.5 rounded-xl bg-white/10 border border-white/20 text-xs font-mono text-white focus:outline-none focus:border-pink-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
-                    Supabase Anon Public Key (anonKey) *
-                  </label>
-                  <textarea
-                    rows={3}
-                    required
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    value={supabaseKeyInput}
-                    onChange={(e) => setSupabaseKeyInput(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-xs font-mono text-white focus:outline-none focus:border-pink-400 resize-none"
-                  />
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    disabled={isTestingSupabase}
-                    onClick={handleTestSupabase}
-                    className="flex-1 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/15 transition-colors cursor-pointer"
-                  >
-                    {isTestingSupabase ? "Đang kiểm tra..." : "🔍 Kiểm Tra Kết Nối"}
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-md shadow-pink-500/25 transition-all cursor-pointer"
-                  >
-                    💾 Lưu & Kích Hoạt
-                  </button>
-                </div>
-              </form>
-
-              <div className="border-t border-white/10 pt-3 space-y-2 text-xs">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-white/50 block">
-                  Công cụ hỗ trợ triển khai
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={handlePushAllToSupabase}
-                    className="h-9 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 font-semibold text-[11px] transition-colors cursor-pointer"
-                  >
-                    📤 Đẩy Dữ Liệu Lên Supabase
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCopySQLSchema}
-                    className="h-9 px-3 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 font-semibold text-[11px] transition-colors cursor-pointer"
-                  >
-                    📋 Sao Chép Script SQL
-                  </button>
-                </div>
-
-                {supabase.isConfigured() && (
-                  <button
-                    type="button"
-                    onClick={handleDisableSupabase}
-                    className="w-full mt-2 py-2 text-rose-400 hover:text-rose-300 text-[11px] transition-colors cursor-pointer underline text-center"
-                  >
-                    Tắt Supabase và dùng bộ nhớ Local Storage
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

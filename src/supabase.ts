@@ -13,8 +13,16 @@ function getEnvValue(key: string): string {
   return "";
 }
 
-export const supabaseUrl = getEnvValue("VITE_SUPABASE_URL");
-export const supabaseAnonKey = getEnvValue("VITE_SUPABASE_ANON_KEY");
+export const supabaseUrl =
+  getEnvValue("VITE_SUPABASE_URL") ||
+  getEnvValue("NEXT_PUBLIC_SUPABASE_URL") ||
+  getEnvValue("SUPABASE_URL");
+
+export const supabaseAnonKey =
+  getEnvValue("VITE_SUPABASE_ANON_KEY") ||
+  getEnvValue("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ||
+  getEnvValue("SUPABASE_ANON_KEY") ||
+  getEnvValue("KEY");
 
 // Ensure URL has http(s) prefix if provided
 const validUrl =

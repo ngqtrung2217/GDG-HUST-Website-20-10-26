@@ -7,7 +7,7 @@ interface WishLetterRevealModalProps {
   isUnlocked: boolean;
   onClose: () => void;
   onOpenCodeInput?: () => void;
-  onDirectUnlockCode?: (code: string) => boolean;
+  onDirectUnlockCode?: (code: string) => boolean | Promise<boolean>;
 }
 
 export function WishLetterRevealModal({
@@ -46,7 +46,7 @@ export function WishLetterRevealModal({
 
   if (!boy) return null;
 
-  function handleUnlockSubmit(e: React.FormEvent) {
+  async function handleUnlockSubmit(e: React.FormEvent) {
     e.preventDefault();
     setUnlockError("");
     const clean = codeInput.trim().toUpperCase();
@@ -54,7 +54,7 @@ export function WishLetterRevealModal({
 
     let ok = false;
     if (onDirectUnlockCode) {
-      ok = onDirectUnlockCode(clean);
+      ok = await onDirectUnlockCode(clean);
     }
 
     if (!ok && boy) {

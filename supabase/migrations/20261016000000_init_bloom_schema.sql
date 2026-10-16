@@ -52,6 +52,17 @@ CREATE TABLE IF NOT EXISTS questions (
   clue TEXT
 );
 
+CREATE TABLE IF NOT EXISTS gifts (
+  id TEXT PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  recipient_name TEXT,
+  sender_name TEXT,
+  message TEXT,
+  gift_content TEXT,
+  ornament_type TEXT DEFAULT 'lotus',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Default organization group
 INSERT INTO groups (id, group_name, secret_code, group_access_code, wish_message)
 VALUES (
@@ -68,23 +79,43 @@ ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE boys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE girls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gifts ENABLE ROW LEVEL SECURITY;
 
 -- Anonymous client policies for event operations
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write groups') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'groups' AND policyname = 'Public Read/Write groups') THEN
     CREATE POLICY "Public Read/Write groups" ON groups FOR ALL TO anon USING (true) WITH CHECK (true);
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write boys') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'boys' AND policyname = 'Public Read/Write boys') THEN
     CREATE POLICY "Public Read/Write boys" ON boys FOR ALL TO anon USING (true) WITH CHECK (true);
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write girls') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'girls' AND policyname = 'Public Read/Write girls') THEN
     CREATE POLICY "Public Read/Write girls" ON girls FOR ALL TO anon USING (true) WITH CHECK (true);
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write questions') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'questions' AND policyname = 'Public Read/Write questions') THEN
     CREATE POLICY "Public Read/Write questions" ON questions FOR ALL TO anon USING (true) WITH CHECK (true);
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'gifts' AND policyname = 'Public Insert gifts') THEN
+    CREATE POLICY "Public Insert gifts" ON gifts FOR INSERT TO anon WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'gifts' AND policyname = 'Public Update gifts') THEN
+    CREATE POLICY "Public Update gifts" ON gifts FOR UPDATE TO anon USING (true) WITH CHECK (true);
+  END IF;
 END $$;
+
+-- RPC get_gift function
+CREATE OR REPLACE FUNCTION get_gift(p_code TEXT)
+RETURNS SETOF gifts
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT * FROM gifts WHERE UPPER(TRIM(code)) = UPPER(TRIM(p_code));
+$$;
+
+GRANT EXECUTE ON FUNCTION get_gift(TEXT) TO anon, authenticated;
 
 -- Enable Supabase Realtime publication
 DO $$
@@ -92,7 +123,6 @@ BEGIN
   BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE groups, boys, girls, questions;
   EXCEPTION WHEN OTHERS THEN
-    -- Table already added or publication difference
     NULL;
   END;
 END $$;

@@ -11,7 +11,7 @@ interface ViralTree2010Props {
   onOpenSecretCodeModal: () => void;
   onOpenBoyLoginModal: () => void;
   onOpenGirlAccountModal: () => void;
-  onDirectUnlockCode?: (code: string) => boolean | void;
+  onDirectUnlockCode?: (code: string) => boolean | void | Promise<boolean | void>;
 }
 
 const ORNAMENT_ICONS: Record<string, string> = {
@@ -57,14 +57,14 @@ export function ViralTree2010({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentBoys = boys.slice(startIndex, startIndex + itemsPerPage);
 
-  function handleQuickSubmit(e: React.FormEvent) {
+  async function handleQuickSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!inputCode.trim()) {
       onOpenSecretCodeModal();
       return;
     }
     if (onDirectUnlockCode) {
-      onDirectUnlockCode(inputCode.trim());
+      await onDirectUnlockCode(inputCode.trim());
       setInputCode("");
     } else {
       onOpenSecretCodeModal();
@@ -403,7 +403,7 @@ export function ViralTree2010({
                 onClick={onOpenBoyLoginModal}
                 className="mt-2.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white text-[11px] sm:text-xs font-semibold shadow-md shadow-pink-500/20 cursor-pointer transition-all active:scale-95"
               >
-                Gửi lời chúc ngay ✨
+                Gửi lời chúc ngay
               </button>
             </div>
           )}

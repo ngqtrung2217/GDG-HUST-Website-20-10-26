@@ -349,7 +349,7 @@ export function QuizPlay({
 
         {feedback === "correct" && (
           <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
-            <span>Chính xác rồi! Tuyệt vời quá! 🎉</span>
+            <span>Chính xác rồi! Tuyệt vời quá!</span>
           </div>
         )}
       </div>

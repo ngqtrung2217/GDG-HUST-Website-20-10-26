@@ -214,7 +214,6 @@ export function BoyWishComposerModal({
                   onClick={handleCopyCode}
                   className="w-full sm:w-1/2 h-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <span>📋</span>
                   <span>{copied ? "Đã sao chép mã!" : "Sao chép mã"}</span>
                 </button>
 
@@ -309,7 +308,7 @@ export function BoyWishComposerModal({
                       onClick={generateRandomCode}
                       className="text-[10px] text-pink-300 hover:text-pink-200 underline cursor-pointer"
                     >
-                      🎲 Tạo mã nhanh
+                      Tạo mã nhanh
                     </button>
                   </div>
                   <input
@@ -317,7 +316,7 @@ export function BoyWishComposerModal({
                     required
                     value={secretCode}
                     onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
-                    placeholder="VD: HUY2010, LOVE2010, GDG88..."
+                    placeholder="Nhập mã bí mật..."
                     className="w-full h-11 px-3.5 rounded-xl bg-white/10 border border-white/20 text-white font-mono uppercase tracking-wider text-xs focus:outline-none focus:border-pink-400 placeholder:text-white/30 placeholder:normal-case placeholder:font-sans"
                   />
                   <p className="text-[10px] text-white/40 mt-1">

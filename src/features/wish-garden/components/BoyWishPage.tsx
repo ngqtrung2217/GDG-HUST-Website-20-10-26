@@ -187,10 +187,10 @@ export function BoyWishPage() {
     setTimeout(() => setNotification(""), 4500);
   }
 
-  function handleDirectUnlock(code: string): boolean {
+  async function handleDirectUnlock(code: string): Promise<boolean> {
     const clean = code.trim().toUpperCase();
     if (!clean) return false;
-    const res = dbService.verifySecretCode(clean, activeToken);
+    const res = await dbService.verifySecretCodeAsync(clean, activeToken);
     if (res.success) {
       refreshTree();
       if (res.unlockedBoy) {
@@ -253,7 +253,6 @@ export function BoyWishPage() {
                 : "text-slate-600 hover:text-pink-600"
             }`}
           >
-            <span>💌</span>
             <span>Soạn Thư & Treo Quà</span>
           </button>
 
@@ -266,7 +265,6 @@ export function BoyWishPage() {
                 : "text-slate-600 hover:text-pink-600"
             }`}
           >
-            <span>🌳</span>
             <span>Xem Cây Ước Nguyện</span>
             {totalWishes > 0 && (
               <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
@@ -287,14 +285,14 @@ export function BoyWishPage() {
               /* Success / Voucher State */
               <div className="rounded-3xl bg-white/95 backdrop-blur-md border border-pink-200 p-6 sm:p-8 shadow-2xl text-center space-y-5">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 border border-emerald-400 text-xs font-bold uppercase tracking-wider">
-                  <span>✓</span> Đã Treo Lời Chúc Thành Công Lên Cây!
+                  <span>✓</span> Đã Treo Lời Chúc Lên Cây!
                 </span>
 
                 <h2 className="text-xl sm:text-2xl font-bold font-serif text-[#431936]">
                   Thẻ Xác Nhận Mã Bí Mật
                 </h2>
                 <p className="text-xs text-[#826A73] max-w-md mx-auto leading-relaxed">
-                  Lưu hoặc chụp lại màn hình thẻ này. Khi gặp bạn nữ ngoài đời để trao quà, bạn hãy gửi mã bí mật này để bạn ấy mở khóa bức thư trên Cây Ước Nguyện!
+                  Lưu hoặc chụp lại màn hình thẻ này để gửi cho bạn nữ mở quà trên Cây Ước Nguyện.
                 </p>
 
                 {/* Printable / Screenshot Voucher */}
@@ -309,7 +307,7 @@ export function BoyWishPage() {
                       GDGoC HUST · Thư Ước Nguyện 20/10
                     </span>
                     <h3 className="text-lg font-bold font-serif text-[#431936] mt-0.5">
-                      Món Quà Từ Bạn: {confirmedData.boyName}
+                      Món Quà Từ: {confirmedData.boyName}
                     </h3>
                     {confirmedData.assignedGirlName && (
                       <p className="text-xs text-pink-600 font-semibold mt-0.5">
@@ -340,8 +338,8 @@ export function BoyWishPage() {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-pink-200 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>🌸 Bloom With Us 20/10</span>
-                    <span className="font-semibold text-pink-700">Chụp màn hình gửi bạn nữ</span>
+                    <span>Bloom With Us 20/10</span>
+                    <span className="font-semibold text-pink-700">Gửi mã này cho bạn nữ</span>
                   </div>
                 </div>
 
@@ -351,8 +349,7 @@ export function BoyWishPage() {
                     onClick={handleCopyCode}
                     className="w-full sm:w-1/2 h-11 rounded-2xl bg-white border border-pink-200 hover:bg-pink-50 text-pink-700 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
-                    <span>📋</span>
-                    <span>{copied ? "Đã sao chép mã!" : "Sao chép mã bí mật"}</span>
+                    <span>{copied ? "Đã sao chép!" : "Sao chép mã"}</span>
                   </button>
 
                   <button
@@ -360,8 +357,7 @@ export function BoyWishPage() {
                     onClick={() => setActiveTab("tree")}
                     className="w-full sm:w-1/2 h-11 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>🌳</span>
-                    <span>Xem Món Quà Trên Cây Ngay</span>
+                    <span>Xem Trên Cây Ước Nguyện</span>
                   </button>
                 </div>
 
@@ -375,7 +371,7 @@ export function BoyWishPage() {
                   }}
                   className="text-xs text-slate-500 hover:text-pink-600 transition-colors pt-2 cursor-pointer"
                 >
-                  ✍️ Soạn thêm hoặc gửi một lời chúc khác
+                  Treo thêm một lời chúc khác
                 </button>
               </div>
             ) : (
@@ -383,17 +379,15 @@ export function BoyWishPage() {
               <div className="rounded-3xl bg-white/95 backdrop-blur-md border border-pink-200/90 p-6 sm:p-8 shadow-xl">
                 <div className="border-b border-pink-100 pb-4 mb-5">
                   <h2 className="text-lg sm:text-xl font-bold font-serif text-[#431936] flex items-center gap-2">
-                    <span>💌</span>
                     <span>Treo Lời Chúc & Tạo Mã Bí Mật</span>
                   </h2>
                   <p className="text-xs text-[#826A73] mt-1">
-                    Điền thông tin và lời chúc của bạn. Món quà sẽ được treo ngay lập tức lên Cây Ước Nguyện để bạn nữ mở!
+                    Điền thông tin và lời chúc của bạn. Món quà sẽ được treo ngay lập tức lên Cây Ước Nguyện để bạn nữ mở.
                   </p>
                 </div>
 
                 {formError && (
                   <div className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
-                    <span>⚠️</span>
                     <span>{formError}</span>
                   </div>
                 )}
@@ -407,7 +401,7 @@ export function BoyWishPage() {
                     <input
                       type="text"
                       required
-                      placeholder="VD: Minh Anh, Đức Huy, Tuấn Kiệt..."
+                      placeholder="Nhập họ và tên..."
                       value={boyName}
                       onChange={(e) => setBoyName(e.target.value)}
                       className="w-full h-11 px-3.5 rounded-2xl bg-pink-50/40 border border-pink-200 focus:border-pink-500 focus:bg-white focus:outline-none text-xs text-[#2C1820] font-medium transition-all"
@@ -422,7 +416,7 @@ export function BoyWishPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="VD: Lan Chi, Thu Hà hoặc 'Toàn thể các bạn nữ GDGoC'..."
+                      placeholder="Nhập tên người nhận (để trống nếu gửi chung)..."
                       value={assignedGirlName}
                       onChange={(e) => setAssignedGirlName(e.target.value)}
                       className="w-full h-11 px-3.5 rounded-2xl bg-pink-50/40 border border-pink-200 focus:border-pink-500 focus:bg-white focus:outline-none text-xs text-[#2C1820] font-medium transition-all"
@@ -471,7 +465,6 @@ export function BoyWishPage() {
                         onClick={generateRandomCode}
                         className="text-[11px] text-pink-600 hover:text-pink-700 font-bold flex items-center gap-1 cursor-pointer"
                       >
-                        <span>🎲</span>
                         <span>Tạo mã tự động</span>
                       </button>
                     </label>
@@ -479,14 +472,14 @@ export function BoyWishPage() {
                       <input
                         type="text"
                         required
-                        placeholder="VD: SEN2010, GDG2010..."
+                        placeholder="Nhập mã bí mật..."
                         value={secretCode}
                         onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
                         className="w-full h-11 px-3.5 rounded-2xl bg-pink-50/40 border border-pink-200 focus:border-pink-500 focus:bg-white focus:outline-none font-mono text-sm tracking-widest text-[#D84D74] font-bold uppercase transition-all"
                       />
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1 italic">
-                      💡 Bạn sẽ gửi hoặc đọc mã này cho bạn nữ khi gặp ngoài đời để bạn ấy mở thư!
+                      Mã này bạn sẽ gửi hoặc đọc cho bạn nữ để bạn ấy mở thư.
                     </p>
                   </div>
 
@@ -498,7 +491,7 @@ export function BoyWishPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="VD: Bạn nam đeo kính gọng đen ngồi bàn 3 tầng 2 thư viện..."
+                      placeholder="Nhập gợi ý nhận diện hoặc vị trí gặp mặt..."
                       value={giftHint}
                       onChange={(e) => setGiftHint(e.target.value)}
                       className="w-full h-11 px-3.5 rounded-2xl bg-pink-50/40 border border-pink-200 focus:border-pink-500 focus:bg-white focus:outline-none text-xs text-[#2C1820] font-medium transition-all"
@@ -514,7 +507,7 @@ export function BoyWishPage() {
                     <textarea
                       required
                       rows={4}
-                      placeholder="Viết những lời chân thành, ấm áp nhất gửi đến các bạn nữ nhân ngày 20/10..."
+                      placeholder="Nhập lời chúc 20/10 gửi tặng bạn nữ..."
                       value={personalWish}
                       onChange={(e) => setPersonalWish(e.target.value)}
                       className="w-full p-3.5 rounded-2xl bg-pink-50/40 border border-pink-200 focus:border-pink-500 focus:bg-white focus:outline-none text-xs text-[#2C1820] leading-relaxed transition-all resize-none"
@@ -530,8 +523,8 @@ export function BoyWishPage() {
                     >
                       {isSubmitting ? (
                         <>
-                          <span className="animate-spin text-sm">⏳</span>
-                          <span>Đang lưu lên đám mây...</span>
+                          <span className="animate-spin text-sm inline-block">●</span>
+                          <span>Đang lưu...</span>
                         </>
                       ) : (
                         <>

@@ -76,10 +76,10 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
     setTimeout(() => setNotification(""), 4500);
   }
 
-  function handleDirectUnlock(code: string): boolean {
+  async function handleDirectUnlock(code: string): Promise<boolean> {
     const clean = code.trim().toUpperCase();
     if (!clean) return false;
-    const res = activeDb.verifySecretCode(clean, activeToken);
+    const res = await activeDb.verifySecretCodeAsync(clean, activeToken);
     if (res.success) {
       refreshTree();
       if (res.unlockedBoy) {
@@ -110,8 +110,8 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
           <div className="p-4 rounded-3xl bg-white/95 backdrop-blur-md border border-pink-200/90 shadow-xl text-xs space-y-2.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="size-8 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                  💐
+                <span className="size-8 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  GDG
                 </span>
                 <div>
                   <h3 className="font-bold text-sm text-[#431936]">
@@ -128,7 +128,7 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
                 onClick={() => setIsBoyLoginModalOpen(true)}
                 className="px-3 py-1.5 rounded-xl bg-pink-100/90 hover:bg-pink-100 text-pink-700 font-bold text-[11px] transition-colors cursor-pointer shrink-0"
               >
-                ✍️ Sửa lời chúc & mã
+                Sửa lời chúc & mã
               </button>
             </div>
 
@@ -156,7 +156,7 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
               </button>
             </div>
             <p className="text-[11px] text-slate-500 italic">
-              💡 Hãy giữ mã bí mật này để đọc trực tiếp cho bạn nữ khi gặp ngoài đời trao quà nhé!
+              Lưu ý: Hãy giữ mã bí mật này để gửi cho bạn nữ khi gặp ngoài đời nhận quà.
             </p>
           </div>
         </div>
@@ -167,7 +167,6 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
             onClick={() => setIsBoyLoginModalOpen(true)}
             className="px-4 py-2 rounded-full bg-white/95 hover:bg-white text-[#D84D74] font-bold text-xs border border-pink-200 shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
           >
-            <span>💌</span>
             <span>Dành Cho Bạn Nam: Treo Lời Chúc & Tạo Mã</span>
           </button>
         </div>

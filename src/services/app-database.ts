@@ -605,9 +605,22 @@ export class AppDatabaseService {
     this.notifyListeners();
 
     if (this.isUsingSupabase()) {
-      // Ensure group exists then upsert boy
+      // Ensure group exists then upsert boy and gifts
       supabase.insert<Group>("groups", group).then(() => {
         supabase.insert<Boy>("boys", boy!);
+        if (boy?.secret_code) {
+          void Promise.resolve(
+            supabase.client.from("gifts").upsert({
+              id: boy.id,
+              code: boy.secret_code.trim().toUpperCase(),
+              recipient_name: boy.assigned_girl_name || "",
+              sender_name: boy.name,
+              message: boy.personal_wish || "",
+              gift_content: boy.gift_hint || "",
+              ornament_type: boy.ornament_type || "lotus",
+            })
+          ).catch(() => {});
+        }
       }).catch((err) => console.warn("[Supabase] submitBoyWish error:", err));
     }
 
@@ -677,6 +690,98 @@ export class AppDatabaseService {
     }
 
     return { success: true, group, boys, unlockedBoy: matchingBoy };
+  }
+
+  public async verifySecretCodeAsync(
+    code: string,
+    girlToken?: string
+  ): Promise<{
+    success: boolean;
+    group?: Group;
+    boys?: Boy[];
+    unlockedBoy?: Boy;
+  }> {
+    const syncResult = this.verifySecretCode(code, girlToken);
+    if (syncResult.success) {
+      return syncResult;
+    }
+
+    const clean = code.trim().toUpperCase();
+    if (!clean) return { success: false };
+
+    // Check remote Supabase using RPC get_gift(p_code)
+    if (this.isUsingSupabase()) {
+      try {
+        const { data, error } = await supabase.client.rpc("get_gift", { p_code: clean });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const gift = data[0] as {
+            id?: string;
+            code?: string;
+            recipient_name?: string;
+            sender_name?: string;
+            message?: string;
+            gift_content?: string;
+            ornament_type?: OrnamentType;
+          };
+
+          const group = this.state.groups[0] || DEFAULT_GROUPS[0];
+          if (!this.state.groups.some((g) => g.id === group.id)) {
+            this.state.groups.push(group);
+          }
+
+          let existingBoy = this.state.boys.find(
+            (b) => b.secret_code?.trim().toUpperCase() === clean || (gift.id && b.id === gift.id)
+          );
+
+          if (!existingBoy) {
+            existingBoy = {
+              id: gift.id || `gift_${Date.now()}`,
+              group_id: group.id,
+              name: gift.sender_name || "Bạn Nam",
+              email: "",
+              token: gift.code || clean,
+              secret_code: clean,
+              description: gift.gift_content || gift.message || "",
+              personal_wish: gift.message || "",
+              ornament_type: (gift.ornament_type as OrnamentType) || "lotus",
+              gift_hint: gift.gift_content || "",
+              has_written_wish: true,
+              assigned_girl_name: gift.recipient_name || "",
+            };
+            this.state.boys.push(existingBoy);
+          } else {
+            existingBoy.personal_wish = gift.message || existingBoy.personal_wish;
+            existingBoy.gift_hint = gift.gift_content || existingBoy.gift_hint;
+          }
+
+          this.sessionUnlockedCodes.add(clean);
+          this.saveSessionUnlockedCodes();
+          this.saveToStorage();
+          this.notifyListeners();
+
+          if (girlToken) {
+            const girl = this.getGirlByToken(girlToken);
+            if (girl) {
+              const unlocked = new Set((girl.unlocked_codes || []).map((c) => c.toUpperCase()));
+              unlocked.add(clean);
+              girl.unlocked_codes = [...unlocked];
+              this.saveToStorage();
+              this.notifyListeners();
+              supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
+                unlocked_codes: girl.unlocked_codes,
+              }).catch(() => {});
+            }
+          }
+
+          const boys = this.state.boys.filter((b) => b.group_id === group.id);
+          return { success: true, group, boys, unlockedBoy: existingBoy };
+        }
+      } catch (err) {
+        console.warn("[Supabase] get_gift RPC error:", err);
+      }
+    }
+
+    return { success: false };
   }
 
   public getTreeData(girlToken?: string, preferredGroupId?: string) {
