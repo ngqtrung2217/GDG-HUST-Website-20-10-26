@@ -133,7 +133,7 @@ export function GirlAccountModal({
 
               <button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-pink-500/20 transition-all cursor-pointer"
+                className="w-full h-12 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
               >
                 Bắt Đầu Tham Gia
               </button>
@@ -160,7 +160,7 @@ export function GirlAccountModal({
                 <input
                   type="text"
                   required
-                  placeholder="VD: lanchi_2010, thuha_2010..."
+                  placeholder="Nhập mã tham gia cá nhân..."
                   value={existingToken}
                   onChange={(e) => setExistingToken(e.target.value.trim())}
                   className="w-full h-11 px-3.5 rounded-xl border border-pink-200 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:border-pink-500 shadow-sm"
@@ -169,7 +169,7 @@ export function GirlAccountModal({
 
               <button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-pink-500/20 transition-all cursor-pointer"
+                className="w-full h-12 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
               >
                 Vào Cây Của Bạn
               </button>

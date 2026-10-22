@@ -110,7 +110,7 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
           <div className="p-4 rounded-3xl bg-white/95 backdrop-blur-md border border-pink-200/90 shadow-xl text-xs space-y-2.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="size-8 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                <span className="size-8 rounded-xl bg-[#D94B76] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                   GDG
                 </span>
                 <div>
@@ -156,7 +156,7 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
               </button>
             </div>
             <p className="text-[11px] text-slate-500 italic">
-              Lưu ý: Hãy giữ mã bí mật này để gửi cho bạn nữ khi gặp ngoài đời nhận quà.
+              Gửi mã này cho bạn nữ để mở thư trên cây.
             </p>
           </div>
         </div>
@@ -167,7 +167,7 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
             onClick={() => setIsBoyLoginModalOpen(true)}
             className="px-4 py-2 rounded-full bg-white/95 hover:bg-white text-[#D84D74] font-bold text-xs border border-pink-200 shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
           >
-            <span>Dành Cho Bạn Nam: Treo Lời Chúc & Tạo Mã</span>
+            <span>Gửi lời chúc & mã</span>
           </button>
         </div>
       )}
@@ -179,10 +179,8 @@ export function WishGarden({ customDb }: { customDb?: AppDatabaseService }) {
         isUnlocked={treeData.isUnlocked}
         isBoyUnlocked={treeData.isBoyUnlocked}
         onSelectBoy={(boy) => setSelectedBoy(boy)}
-        onOpenSecretCodeModal={() => setIsCodeModalOpen(true)}
         onOpenBoyLoginModal={() => setIsBoyLoginModalOpen(true)}
         onOpenGirlAccountModal={() => setIsGirlAccountModalOpen(true)}
-        onDirectUnlockCode={handleDirectUnlock}
       />
 
       <WishLetterRevealModal

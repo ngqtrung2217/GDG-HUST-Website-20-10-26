@@ -1,7 +1,22 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { dbService, type AppDatabaseService } from "@/services/app-database";
+import { motion, useReducedMotion } from "framer-motion";
+import { dbService, TEAM_QUESTIONS, type AppDatabaseService } from "@/services/app-database";
 import type { Girl, Question, OptionKey } from "@/types/database";
+import { GirlWelcome } from "@/features/quiz/components/GirlWelcome";
+import { LetterSheet } from "@/features/quiz/components/LetterSheet";
+import { INVITE_TITLE, INVITE_PS, inviteBody, THANKS_TITLE, THANKS } from "@/features/quiz/invitation";
+import { QuestionReview } from "@/features/quiz/components/QuestionReview";
+
+// Event opens 18:00 22/10/2026 Vietnam time; girls who log in earlier only see a countdown.
+const OPEN_AT = new Date("2026-10-22T18:00:00+07:00").getTime();
+const DEFAULT_WISH = "Chúc bạn một ngày 20/10 thật rạng rỡ, ngập tràn niềm vui và yêu thương!";
+
+function formatCountdown(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${Math.floor(s / 86400)} ngày ${pad(Math.floor(s / 3600) % 24)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+}
 
 export function QuizPlay({
   token,
@@ -11,26 +26,40 @@ export function QuizPlay({
   customDb?: AppDatabaseService;
 }) {
   const activeDb = customDb || dbService;
+  const navigate = useNavigate();
   const [girl, setGirl] = useState<Girl | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [pickedKey, setPickedKey] = useState<OptionKey | null>(null);
+  const [typedAnswer, setTypedAnswer] = useState("");
   const [feedback, setFeedback] = useState<"idle" | "wrong_1" | "wrong_2_reveal" | "correct">("idle");
   const [loading, setLoading] = useState(true);
-  const [inputCode, setInputCode] = useState("");
-  const [codeError, setCodeError] = useState("");
+  const [showWelcome, setShowWelcome] = useState(false);
+  // Boys' code: which group's game they picked ("" = show the picker), or the answer sheet.
+  const [boyTeam, setBoyTeam] = useState("");
+  const [showAnswers, setShowAnswers] = useState(false);
+  const [letterDone, setLetterDone] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const [now, setNow] = useState(() => Date.now());
+  const isOpen = now >= OPEN_AT;
+
+  useEffect(() => {
+    if (isOpen) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [isOpen]);
 
   const loadGirlByToken = useCallback(
-    (userToken: string) => {
+    async (userToken: string): Promise<boolean> => {
       const clean = userToken.trim();
-      if (!clean) return;
+      if (!clean) return false;
 
-      let found = activeDb.getGirlByToken(clean);
-      if (!found) {
-        found = activeDb.getOrCreateGirl(clean);
-      }
+      // The roster is private: Supabase only returns the girl whose code matches.
+      const found = await activeDb.loginGirl(clean);
+      if (!found) return false;
 
       setGirl(found);
+      setShowWelcome(found.stage === "not_started");
       const list = activeDb.getQuestionsForGirl(found);
       setQuestions(list);
       setCurrentIndex(found.current_question_index || 0);
@@ -38,6 +67,8 @@ export function QuizPlay({
       if (typeof localStorage !== "undefined") {
         localStorage.setItem("active_girl_token", found.token);
       }
+      activeDb.notifyListeners();
+      return true;
     },
     [activeDb]
   );
@@ -48,25 +79,15 @@ export function QuizPlay({
       resolvedToken = localStorage.getItem("active_girl_token") || "";
     }
 
-    if (resolvedToken) {
-      loadGirlByToken(resolvedToken);
-    }
-    setLoading(false);
-  }, [token, loadGirlByToken]);
-
-  function handleLoginWithCode(e?: React.FormEvent, customToken?: string) {
-    if (e) e.preventDefault();
-    const tokenToUse = customToken || inputCode;
-    const clean = tokenToUse.trim();
-
-    if (!clean) {
-      setCodeError("Vui lòng nhập mã tham gia của bạn!");
+    if (!resolvedToken) {
+      setLoading(false);
       return;
     }
-
-    setCodeError("");
-    loadGirlByToken(clean);
-  }
+    loadGirlByToken(resolvedToken).then((ok) => {
+      if (!ok && typeof localStorage !== "undefined") localStorage.removeItem("active_girl_token");
+      setLoading(false);
+    });
+  }, [token, loadGirlByToken]);
 
   function handleResetQuiz() {
     if (!girl) return;
@@ -79,14 +100,37 @@ export function QuizPlay({
     setPickedKey(null);
   }
 
+  // Boys' code: replay a group from the start. Kept local; saveGirlProgress skips this account.
+  function startBoyTeam(team: string) {
+    const g = activeDb.getGirlByToken(girl!.token);
+    if (!g) return;
+    Object.assign(g, {
+      quiz_group: `Nhóm ${team}`,
+      current_question_index: 0,
+      wrong_attempts: 0,
+      stage: "not_started",
+      completed_at: undefined,
+    });
+    setGirl({ ...g });
+    setQuestions(activeDb.getQuestionsForGirl(g));
+    setCurrentIndex(0);
+    setFeedback("idle");
+    setPickedKey(null);
+    setShowWelcome(true);
+    setBoyTeam(team);
+  }
+
   function handleSwitchAccount() {
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem("active_girl_token");
     }
+    activeDb.notifyListeners();
     setGirl(null);
-    setInputCode("");
+    setBoyTeam("");
+    setShowAnswers(false);
     setFeedback("idle");
     setPickedKey(null);
+    setLetterDone(false);
   }
 
   if (loading) {
@@ -97,56 +141,130 @@ export function QuizPlay({
     );
   }
 
+  // No code: everyone gets the thank-you letter, with nothing behind it.
   if (!girl) {
+    return <LetterSheet to="" title={THANKS_TITLE}>{THANKS}</LetterSheet>;
+  }
+
+  // Boys' code (girls.is_checker, set only in Supabase): pick any group's game, skip the countdown.
+  if (girl.is_checker && showAnswers) {
+    return <QuestionReview onExit={() => setShowAnswers(false)} />;
+  }
+  if (girl.is_checker && !boyTeam) {
     return (
-      <main className="w-full min-h-screen bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EF] to-[#F7D5DF] text-[#381A2B] flex flex-col items-center justify-center p-4 font-sans">
-        <div className="w-full max-w-[440px] rounded-3xl bg-[#FFFDFB] p-7 border border-pink-200/90 shadow-2xl text-center">
-          <div className="size-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center text-xl mx-auto mb-3 font-serif font-bold shadow-md shadow-pink-500/20">
-            20/10
+      <main className="w-full min-h-screen bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EF] to-[#F7D5DF] text-[#381A2B] flex items-center justify-center px-4 pt-28 pb-16">
+        <div className="w-full max-w-[460px] rounded-3xl bg-[#FFFDFB] p-7 border border-pink-200/90 shadow-2xl text-center">
+          <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#B4475A]">Dành cho bạn nam</p>
+          <h1 className="mt-1 text-2xl font-serif font-bold text-[#431936]">Chọn nhóm để chơi thử</h1>
+          <p className="mt-2 text-xs text-[#826A73]">Chơi thử không lưu tiến độ, chơi lại bao nhiêu lần cũng được.</p>
+
+          <div className="mt-5 grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {Object.keys(TEAM_QUESTIONS).map((team) => (
+              <button
+                key={team}
+                type="button"
+                onClick={() => startBoyTeam(team)}
+                className="h-11 rounded-xl border border-pink-200 bg-white text-sm font-semibold text-[#B4475A] hover:bg-pink-50 cursor-pointer"
+              >
+                Nhóm {team}
+              </button>
+            ))}
           </div>
 
-          <span className="inline-block px-3 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px] font-bold uppercase tracking-wider mb-1">
-            Thử Thách Minigame
-          </span>
-
-          <h1 className="text-2xl font-bold font-serif text-[#431936] mt-1">
-            Nhập Mã Tham Gia Thử Thách
-          </h1>
-          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed max-w-xs mx-auto">
-            Nhập mã cá nhân để giải 4 câu hỏi minigame và mở gợi ý nhận quà từ các bạn nam trên cây.
-          </p>
-
-          <form onSubmit={handleLoginWithCode} className="mt-5 space-y-3">
-            {codeError && (
-              <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
-                {codeError}
-              </div>
-            )}
-
-            <div>
-              <input
-                type="text"
-                autoFocus
-                required
-                value={inputCode}
-                onChange={(e) => {
-                  setInputCode(e.target.value);
-                  setCodeError("");
-                }}
-                placeholder="Nhập mã của bạn (VD: lanchi_2010, GDGOC2010...)"
-                className="w-full h-11 px-4 rounded-xl border border-pink-200 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:border-pink-500 shadow-sm placeholder:normal-case placeholder:font-sans placeholder:text-slate-400"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all active:scale-[0.98] cursor-pointer"
+          <div className="mt-6 flex flex-col gap-2.5">
+            <Link
+              to="/boy"
+              search={{ token: girl.token, group: girl.group_id, view: "compose" }}
+              className="w-full h-11 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs flex items-center justify-center no-underline"
             >
-              Vào Thử Thách →
+              Viết lời chúc lên cây →
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowAnswers(true)}
+              className="w-full h-11 rounded-xl border border-pink-200 text-[#B4475A] font-semibold text-xs hover:bg-pink-50 cursor-pointer"
+            >
+              Xem đáp án các nhóm
             </button>
-          </form>
+            <button type="button" onClick={handleSwitchAccount} className="mt-1 text-xs text-slate-500 hover:text-slate-700 cursor-pointer">
+              Đổi mã
+            </button>
+          </div>
         </div>
       </main>
+    );
+  }
+
+  // The letter always comes first; once the game is open it ends with a play button.
+  if (!girl.is_checker && (!isOpen || !letterDone)) {
+    return (
+      <LetterSheet
+        to={girl.name}
+        title={THANKS_TITLE}
+        signature="GDG-HUST"
+        pages={[
+          <>
+            <p className="mb-5 text-center text-[21px] sm:text-[24px] leading-snug text-[#B4475A]">{INVITE_TITLE}</p>
+            <p>{`Kính gửi ${girl.name.trim() || "bạn"},`}</p>
+            <div className="mt-4">{inviteBody(girl.name)}</div>
+            <p className="mt-6">Thân gửi và kính thư,</p>
+          </>,
+          INVITE_PS,
+        ]}
+        footer={
+          <div role="status" className="text-center border-t border-dashed border-[#D9C7B0] pt-6">
+            {isOpen ? (
+              <button
+                type="button"
+                onClick={() => setLetterDone(true)}
+                className="w-full h-11 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-sm cursor-pointer"
+              >
+                Bắt đầu chơi →
+              </button>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#B4475A]">
+                  Trò chơi mở lúc 18:00 ngày 22/10/2026
+                </p>
+                <p className="mt-1 text-2xl font-mono font-bold text-[#B4475A] tabular-nums">
+                  {formatCountdown(OPEN_AT - now)}
+                </p>
+              </>
+            )}
+            <p className="mt-4 text-xs text-[#826A73] leading-relaxed">
+              Các bạn nam GDG cũng gửi các lời chúc đến cậu, hãy ấn vào{" "}
+              <Link
+                to="/boy"
+                search={{ token: girl.token, group: girl.group_id, view: "tree" }}
+                className="font-bold text-[#B4475A] bg-pink-100 px-1.5 py-0.5 rounded hover:bg-pink-200 no-underline"
+              >
+                cây ước nguyện
+              </Link>{" "}
+              để xem nhé.
+            </p>
+            <button
+              type="button"
+              onClick={handleSwitchAccount}
+              className="mt-4 text-xs text-[#8C7464] hover:text-[#3A2230] underline underline-offset-4 cursor-pointer"
+            >
+              Đổi mã
+            </button>
+          </div>
+        }
+      >
+        {THANKS}
+      </LetterSheet>
+    );
+  }
+
+  if (showWelcome) {
+    return (
+      <GirlWelcome
+        name={girl.name}
+        code={girl.token}
+        wish={girl.welcome_wish || DEFAULT_WISH}
+        onDone={() => setShowWelcome(false)}
+      />
     );
   }
 
@@ -171,7 +289,7 @@ export function QuizPlay({
           </h1>
 
           <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Bạn đã xuất sắc vượt qua tất cả các câu hỏi của minigame! Giờ đây bạn có thể mở các món quà trên cây ước nguyện.
+            Bạn đã hoàn thành minigame! Hãy dùng manh mối bên dưới để tìm bạn nam và nhận mã mở quà.
           </p>
 
           <div className="mt-5 p-4 rounded-2xl bg-pink-50/70 border border-pink-100 text-left space-y-2">
@@ -191,7 +309,7 @@ export function QuizPlay({
             <Link
               to="/boy"
               search={{ token: girl.token, group: girl.group_id, view: "tree" }}
-              className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all cursor-pointer no-underline"
+              className="w-full h-11 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer no-underline"
             >
               <span>Đến Cây Ước Nguyện Nhận Quà</span>
               <span>→</span>
@@ -215,17 +333,28 @@ export function QuizPlay({
   function handlePickOption(key: OptionKey) {
     if (feedback === "correct" || feedback === "wrong_2_reveal") return;
     setPickedKey(key);
+    submitAnswer(key);
+  }
 
-    const result = activeDb.submitQuizAnswer(girl!.token, currentIndex, key);
+  function handleTypedSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (feedback === "correct" || feedback === "wrong_2_reveal" || !typedAnswer.trim()) return;
+    submitAnswer(typedAnswer);
+  }
+
+  function submitAnswer(answer: string) {
+    const result = activeDb.submitQuizAnswer(girl!.token, currentIndex, answer);
     setGirl(result.girl);
 
     if (result.correct) {
       setFeedback("correct");
       setTimeout(() => {
         setPickedKey(null);
+        setTypedAnswer("");
         setFeedback("idle");
         setCurrentIndex(result.nextIndex);
-      }, 900);
+        if (result.completed) goToTree(result.girl);
+      }, 1800);
       return;
     }
 
@@ -241,8 +370,15 @@ export function QuizPlay({
     const result = activeDb.advanceAfterReveal(girl!.token, currentIndex);
     setGirl(result.girl);
     setPickedKey(null);
+    setTypedAnswer("");
     setFeedback("idle");
     setCurrentIndex(result.nextIndex);
+    if (result.completed) goToTree(result.girl);
+  }
+
+  function goToTree(g: Girl) {
+    activeDb.notifyListeners();
+    navigate({ to: "/boy", search: { token: g.token, group: g.group_id, view: "tree" } });
   }
 
   const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100);
@@ -268,7 +404,7 @@ export function QuizPlay({
 
         <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden mb-6">
           <div
-            className="h-full bg-gradient-to-r from-pink-500 to-rose-400 transition-all duration-300 rounded-full"
+            className="h-full bg-[#D94B76] transition-all duration-300 rounded-full"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -276,7 +412,51 @@ export function QuizPlay({
         <h2 className="text-lg font-bold text-[#381A2B] leading-snug">
           {currentQuestion?.text}
         </h2>
+        {currentQuestion?.hint && (
+          <p className="mt-3 px-3 py-2 rounded-xl bg-pink-50 border border-pink-100 text-sm text-[#B4475A]">
+            {currentQuestion.hint}
+          </p>
+        )}
 
+        {currentQuestion?.question_type === "text" ? (
+          <form onSubmit={handleTypedSubmit} className="mt-5 space-y-2.5">
+            <label htmlFor="typed-answer" className="sr-only">
+              Câu trả lời của bạn
+            </label>
+            <input
+              id="typed-answer"
+              key={currentQuestion.id}
+              type="text"
+              autoFocus
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              disabled={feedback === "correct" || feedback === "wrong_2_reveal"}
+              value={typedAnswer}
+              onChange={(e) => {
+                setTypedAnswer(e.target.value.toUpperCase());
+                if (feedback === "wrong_1") setFeedback("idle");
+              }}
+              placeholder="Nhập câu trả lời"
+              aria-invalid={feedback === "wrong_1"}
+              className={`w-full h-12 px-4 rounded-2xl border bg-white font-mono uppercase tracking-[0.25em] text-center text-base text-[#381A2B] focus:outline-none placeholder:normal-case placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-slate-400 ${
+                feedback === "correct"
+                  ? "border-emerald-400 bg-emerald-50"
+                  : feedback === "wrong_1"
+                    ? "border-red-400 bg-red-50 animate-shake"
+                    : "border-pink-200 focus:border-pink-500"
+              }`}
+            />
+            <button
+              type="submit"
+              disabled={!typedAnswer.trim() || feedback === "correct" || feedback === "wrong_2_reveal"}
+              className="w-full h-11 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] disabled:opacity-50 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+            >
+              Trả lời
+            </button>
+          </form>
+        ) : (
         <div className="mt-5 space-y-2.5">
           {currentQuestion?.options.map((option) => {
             const isPicked = pickedKey === option.key;
@@ -316,6 +496,7 @@ export function QuizPlay({
             );
           })}
         </div>
+        )}
 
         {feedback === "wrong_1" && (
           <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
@@ -328,8 +509,11 @@ export function QuizPlay({
             <p className="leading-relaxed">
               Bạn chưa trả lời chính xác sau 2 lần thử. Đáp án đúng là:{" "}
               <strong>
-                {currentQuestion?.correct_key.toUpperCase()}.{" "}
-                {currentQuestion?.options.find((o) => o.key.toLowerCase() === currentQuestion.correct_key.toLowerCase())?.label}
+                {currentQuestion?.question_type === "text"
+                  ? currentQuestion.answer
+                  : `${currentQuestion?.correct_key.toUpperCase()}. ${
+                      currentQuestion?.options.find((o) => o.key.toLowerCase() === currentQuestion.correct_key.toLowerCase())?.label
+                    }`}
               </strong>
             </p>
             {currentQuestion?.clue && (
@@ -340,7 +524,7 @@ export function QuizPlay({
             <button
               type="button"
               onClick={handleContinueAfterReveal}
-              className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-md shadow-pink-500/20 transition-all cursor-pointer"
+              className="w-full h-10 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
             >
               Tiếp tục câu tiếp theo →
             </button>
@@ -348,9 +532,19 @@ export function QuizPlay({
         )}
 
         {feedback === "correct" && (
-          <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
-            <span>Chính xác rồi! Tuyệt vời quá!</span>
-          </div>
+          <motion.div
+            role="status"
+            initial={reduceMotion ? false : { scale: 0.6, opacity: 0, y: 8 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", damping: 12, stiffness: 320 }}
+            className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center"
+          >
+            <p className="text-xs font-semibold text-emerald-700">Chính xác! Kí tự mở khóa:</p>
+            <p className="mt-1 text-4xl font-mono font-bold text-emerald-800 tracking-widest">
+              {/* clue is "Nhận kí tự: K" -> show just the letter */}
+              {currentQuestion?.clue.split(":").pop()?.trim() || currentQuestion?.clue}
+            </p>
+          </motion.div>
         )}
       </div>
     </main>

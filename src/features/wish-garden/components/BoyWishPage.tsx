@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { dbService } from "@/services/app-database";
 import { ViralTree2010 } from "@/features/wish-garden/components/ViralTree2010";
 import { SecretCodeModal } from "@/features/wish-garden/components/SecretCodeModal";
@@ -22,15 +22,6 @@ export function BoyWishPage() {
   const queryGroup = searchParams.get("group") || undefined;
   const queryView = searchParams.get("view") || "";
 
-  // Determine initial tab:
-  // If explicitly view=tree or if queryToken belongs to a girl, show tree
-  // Otherwise, default to "compose" for boys
-  const [activeTab, setActiveTab] = useState<"compose" | "tree">(() => {
-    if (queryView === "tree") return "tree";
-    if (queryToken && dbService.getGirlByToken(queryToken)) return "tree";
-    return "compose";
-  });
-
   const [activeToken, setActiveToken] = useState<string | undefined>(() => {
     if (queryToken) return queryToken;
     if (typeof localStorage !== "undefined") {
@@ -38,6 +29,15 @@ export function BoyWishPage() {
     }
     return undefined;
   });
+
+  // Only the boys' code (logged in on /play) may write; everyone else just views the tree.
+  // Supabase enforces the same rule in submit_boy_wish.
+  const canWrite = Boolean(activeToken && dbService.getGirlByToken(activeToken)?.is_checker);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"compose" | "tree">(() =>
+    canWrite && queryView !== "tree" ? "compose" : "tree"
+  );
+  const openComposer = () => (canWrite ? setActiveTab("compose") : navigate({ to: "/play" }));
 
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(queryGroup);
   const [treeData, setTreeData] = useState(() => dbService.getTreeData(activeToken, queryGroup));
@@ -121,8 +121,8 @@ export function BoyWishPage() {
     const cleanSecret = secretCode.trim().toUpperCase();
 
     try {
-      const res = dbService.submitBoyWish(
-        "GDGOC2010",
+      const res = await dbService.submitBoyWishAsync(
+        activeToken || "",
         boyName.trim(),
         cleanSecret,
         personalWish.trim(),
@@ -215,7 +215,7 @@ export function BoyWishPage() {
     <div className="w-full min-h-screen bg-gradient-to-b from-[#FAF7F2] via-[#F8ECEF] to-[#F1DEE3] text-[#2C1820] flex flex-col items-center">
       {/* Toast notification */}
       {notification && (
-        <div className="fixed top-20 z-50 px-5 py-2.5 rounded-full bg-[#E06D88] text-white text-xs font-semibold shadow-xl animate-bounce">
+        <div className="fixed top-20 z-50 px-5 py-2.5 rounded-full bg-[#E06D88] text-white text-xs font-semibold shadow-md">
           {notification}
         </div>
       )}
@@ -223,51 +223,42 @@ export function BoyWishPage() {
       {/* Top Header & Switcher */}
       <header className="w-full max-w-4xl mx-auto px-4 pt-20 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 z-30">
         <div className="text-center sm:text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-100/90 text-pink-700 text-[11px] font-bold uppercase tracking-wider mb-1">
-            <span>🌸</span>
-            <span>GDGoC HUST · 20/10 Bloom With Us</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold font-serif text-[#431936]">
-            Cây Ước Nguyện & Lời Chúc 20/10
+          <h1 className="text-lg font-semibold font-serif text-[#431936]">
+            Lời chúc 20/10
           </h1>
           <p className="text-xs text-[#826A73]">
-            {dbService.isUsingSupabase() ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                Đồng bộ trực tiếp qua Supabase ({totalWishes} món quà trên cây)
-              </span>
-            ) : (
-              <span>Đang có {totalWishes} món quà & lời chúc trên cây</span>
-            )}
+            {totalWishes > 0 ? `${totalWishes} món quà và lời chúc trên cây` : "Chưa có lời chúc nào trên cây"}
           </p>
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center p-1 rounded-2xl bg-white/80 backdrop-blur-md border border-pink-200/80 shadow-md">
+        <div className="flex items-center p-1 rounded-xl bg-white/70 border border-[#E8D7DC]">
+          {canWrite && (
           <button
             type="button"
             onClick={() => setActiveTab("compose")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "compose"
-                ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/20"
+                ? "bg-[#D94B76] text-white"
                 : "text-slate-600 hover:text-pink-600"
             }`}
           >
-            <span>Soạn Thư & Treo Quà</span>
+            <span>Viết lời chúc</span>
           </button>
+          )}
 
           <button
             type="button"
             onClick={() => setActiveTab("tree")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "tree"
-                ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/20"
+                ? "bg-[#D94B76] text-white"
                 : "text-slate-600 hover:text-pink-600"
             }`}
           >
-            <span>Xem Cây Ước Nguyện</span>
+            <span>Xem cây</span>
             {totalWishes > 0 && (
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                 activeTab === "tree" ? "bg-white/20 text-white" : "bg-pink-100 text-pink-700"
               }`}>
                 {totalWishes}
@@ -279,7 +270,7 @@ export function BoyWishPage() {
 
       {/* Main Content Area */}
       <div className="w-full flex-1 flex flex-col items-center">
-        {activeTab === "compose" ? (
+        {activeTab === "compose" && canWrite ? (
           <section className="w-full max-w-xl mx-auto px-4 py-4 mb-16 animate-fade-in">
             {confirmedData ? (
               /* Success / Voucher State */
@@ -292,7 +283,7 @@ export function BoyWishPage() {
                   Thẻ Xác Nhận Mã Bí Mật
                 </h2>
                 <p className="text-xs text-[#826A73] max-w-md mx-auto leading-relaxed">
-                  Lưu hoặc chụp lại màn hình thẻ này để gửi cho bạn nữ mở quà trên Cây Ước Nguyện.
+                  Gửi mã này cho bạn nữ để mở thư trên cây.
                 </p>
 
                 {/* Printable / Screenshot Voucher */}
@@ -355,7 +346,7 @@ export function BoyWishPage() {
                   <button
                     type="button"
                     onClick={() => setActiveTab("tree")}
-                    className="w-full sm:w-1/2 h-11 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:w-1/2 h-11 rounded-2xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Xem Trên Cây Ước Nguyện</span>
                   </button>
@@ -382,7 +373,7 @@ export function BoyWishPage() {
                     <span>Treo Lời Chúc & Tạo Mã Bí Mật</span>
                   </h2>
                   <p className="text-xs text-[#826A73] mt-1">
-                    Điền thông tin và lời chúc của bạn. Món quà sẽ được treo ngay lập tức lên Cây Ước Nguyện để bạn nữ mở.
+                    Điền thông tin và lời chúc gửi tặng các bạn nữ.
                   </p>
                 </div>
 
@@ -519,7 +510,7 @@ export function BoyWishPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full h-12 rounded-2xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
@@ -528,9 +519,7 @@ export function BoyWishPage() {
                         </>
                       ) : (
                         <>
-                          <span>🌸</span>
-                          <span>Treo Lời Chúc Lên Cây Ước Nguyện</span>
-                          <span>→</span>
+                          <span>Treo lời chúc lên cây</span>
                         </>
                       )}
                     </button>
@@ -548,11 +537,10 @@ export function BoyWishPage() {
               boys={treeData.boys}
               isUnlocked={treeData.isUnlocked}
               isBoyUnlocked={treeData.isBoyUnlocked}
+              isBoyOpenable={treeData.girl ? treeData.isBoyOpenable : undefined}
               onSelectBoy={(boy) => setSelectedBoy(boy)}
-              onOpenSecretCodeModal={() => setIsCodeModalOpen(true)}
-              onOpenBoyLoginModal={() => setActiveTab("compose")}
+              onOpenBoyLoginModal={openComposer}
               onOpenGirlAccountModal={() => setIsGirlAccountModalOpen(true)}
-              onDirectUnlockCode={handleDirectUnlock}
             />
           </section>
         )}

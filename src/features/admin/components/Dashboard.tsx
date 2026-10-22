@@ -163,14 +163,14 @@ export function Dashboard() {
   function handleAdminLogin(e: React.FormEvent) {
     e.preventDefault();
     const clean = passcodeInput.trim().toUpperCase();
-    if (clean === "GDGOC2010" || clean === "GDGOC-HUST" || clean === "2010" || clean === "ADMIN") {
+    if (clean === "GDGOC2010") {
       if (typeof window !== "undefined") {
         sessionStorage.setItem("admin_auth_gdgoc", "true");
       }
       setIsAuthenticated(true);
       setPasscodeError("");
     } else {
-      setPasscodeError("Mã điều phối không đúng. Gợi ý: GDGOC2010");
+      setPasscodeError("Mật khẩu không đúng.");
     }
   }
 
@@ -184,47 +184,55 @@ export function Dashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EF] to-[#F7D5DF] text-[#381A2B] flex flex-col items-center justify-center p-4 pt-24 font-sans">
-        <div className="w-full max-w-[420px] rounded-3xl bg-[#FFFDFB] p-8 border border-pink-200/80 shadow-2xl text-center">
-          <div className="size-16 rounded-2xl bg-pink-100/80 border border-pink-200 flex items-center justify-center text-pink-700 mx-auto mb-4 shadow-sm">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-          </div>
-          <span className="inline-block px-3 py-1 rounded-full bg-pink-50 text-pink-700 border border-pink-200 text-[11px] font-bold uppercase tracking-wider mb-2">
-            Khu Vực Giới Hạn · GDGoC HUST
-          </span>
-          <h1 className="text-2xl font-bold font-serif text-[#431936]">
-            Cổng Điều Phối 20/10
-          </h1>
-          <p className="text-xs text-[#826A73] mt-2 leading-relaxed">
-            Nhập mã PIN điều phối (mặc định: GDGOC2010) để truy cập bảng quản lý sự kiện.
-          </p>
-          <form onSubmit={handleAdminLogin} className="mt-6 space-y-3">
-            <input
-              type="password"
-              required
-              placeholder="Nhập mã PIN điều phối (VD: GDGOC2010)..."
-              value={passcodeInput}
-              onChange={(e) => setPasscodeInput(e.target.value)}
-              className="w-full h-12 px-4 rounded-xl bg-pink-50/50 border border-pink-200 text-[#381A2B] text-center text-sm font-mono tracking-widest focus:outline-none focus:border-pink-500"
-            />
-            {passcodeError && (
-              <p className="text-xs text-rose-600 font-medium">{passcodeError}</p>
-            )}
+      <div className="w-full min-h-screen bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EF] to-[#F7D5DF] text-[#381A2B] flex flex-col items-center justify-center p-4 font-sans">
+        <div className="w-full max-w-[380px]">
+          <h1 className="text-2xl font-semibold font-serif text-[#431936]">Đăng nhập</h1>
+          <p className="text-sm text-[#826A73] mt-1">Trang điều phối dành cho ban tổ chức.</p>
+
+          <form
+            onSubmit={handleAdminLogin}
+            className="mt-6 rounded-2xl bg-[#FFFDFB] border border-[#E8D7DC] p-6 shadow-sm space-y-4"
+          >
+            <div>
+              <label htmlFor="admin-password" className="block text-xs font-semibold text-[#431936] mb-1.5">
+                Mật khẩu
+              </label>
+              <input
+                id="admin-password"
+                type="password"
+                required
+                autoFocus
+                autoComplete="current-password"
+                value={passcodeInput}
+                onChange={(e) => {
+                  setPasscodeInput(e.target.value);
+                  setPasscodeError("");
+                }}
+                aria-invalid={Boolean(passcodeError)}
+                aria-describedby={passcodeError ? "admin-password-error" : undefined}
+                className="w-full h-11 px-3.5 rounded-xl bg-white border border-[#E8D7DC] text-sm text-[#381A2B] focus:outline-none focus:border-[#D94B76] focus:ring-2 focus:ring-[#D94B76]/15"
+              />
+              {passcodeError && (
+                <p id="admin-password-error" className="mt-1.5 text-xs text-rose-600">
+                  {passcodeError}
+                </p>
+              )}
+            </div>
+
             <button
               type="submit"
-              className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold text-xs shadow-lg shadow-pink-500/20 cursor-pointer"
+              className="w-full h-11 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-semibold text-sm transition-colors cursor-pointer"
             >
-              Mở Khóa Bảng Điều Phối
+              Đăng nhập
             </button>
           </form>
-          <div className="mt-4 pt-4 border-t border-pink-100 flex justify-center">
-            <Link to="/boy" className="text-xs text-[#826A73] hover:text-pink-600 transition-colors">
-              ← Quay về Cây Ước Nguyện
-            </Link>
-          </div>
+
+          <Link
+            to="/boy"
+            className="mt-5 inline-block text-xs text-[#826A73] hover:text-[#D94B76] transition-colors"
+          >
+            ← Về Cây Ước Nguyện
+          </Link>
         </div>
       </div>
     );
@@ -236,7 +244,7 @@ export function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
           <div>
             <span className="text-[11px] font-bold text-pink-400 uppercase tracking-wider">
-              Hệ Thống Sự Kiện 20/10 · GDGoC HUST
+              Sự Kiện 20/10 · GDGoC HUST
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mt-1">
               Bảng Điều Phối & Quản Trị
@@ -255,7 +263,7 @@ export function Dashboard() {
               }`}
             >
               <span className={`size-2 rounded-full inline-block ${supabase.isConfigured() ? "bg-emerald-400" : "bg-slate-400"}`} />
-              <span>{supabase.isConfigured() ? "Supabase: Đã Kết Nối (Realtime)" : "Supabase: Chế độ Local"}</span>
+              <span>{supabase.isConfigured() ? "Supabase: Đã kết nối" : "Chế độ lưu cục bộ (Local)"}</span>
             </div>
             <button
               type="button"
@@ -297,7 +305,7 @@ export function Dashboard() {
               onClick={() => setActiveTab(tab.key as any)}
               className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === tab.key
-                  ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/20"
+                  ? "bg-[#D94B76] text-white shadow-sm"
                   : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -319,7 +327,7 @@ export function Dashboard() {
                 <input
                   type="text"
                   required
-                  placeholder="VD: Nhóm Sen Hồng HUST"
+                  placeholder="VD: Nhóm Sen Hồng"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   className="w-full h-10 px-3.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white focus:outline-none focus:border-pink-400"
@@ -367,7 +375,7 @@ export function Dashboard() {
               </div>
               <button
                 type="submit"
-                className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 font-semibold text-xs shadow-md cursor-pointer"
+                className="w-full h-10 rounded-xl bg-[#D94B76] font-semibold text-xs shadow-md cursor-pointer"
               >
                 Lưu Nhóm Mới
               </button>
@@ -485,7 +493,7 @@ export function Dashboard() {
               </div>
               <button
                 type="submit"
-                className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 font-semibold text-xs shadow-md cursor-pointer"
+                className="w-full h-10 rounded-xl bg-[#D94B76] font-semibold text-xs shadow-md cursor-pointer"
               >
                 Lưu Bạn Nam
               </button>
@@ -559,7 +567,7 @@ export function Dashboard() {
                 <input
                   type="email"
                   required
-                  placeholder="lanchi@sis.hust.edu.vn"
+                  placeholder="email@hust.edu.vn"
                   value={girlEmail}
                   onChange={(e) => setGirlEmail(e.target.value)}
                   className="w-full h-10 px-3.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white focus:outline-none"
@@ -579,7 +587,7 @@ export function Dashboard() {
               </div>
               <button
                 type="submit"
-                className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 font-semibold text-xs shadow-md cursor-pointer"
+                className="w-full h-10 rounded-xl bg-[#D94B76] font-semibold text-xs shadow-md cursor-pointer"
               >
                 Lưu Bạn Nữ
               </button>
@@ -647,7 +655,7 @@ export function Dashboard() {
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-1">
-                  Định dạng câu hỏi (Theo kịch bản BTC)
+                  Loại câu hỏi
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -663,13 +671,13 @@ export function Dashboard() {
                         : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
                     }`}
                   >
-                    1 trong 4 (4 đáp án)
+                    Trắc nghiệm (4 đáp án)
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setQType("boolean");
-                      setOptA("Đúng (Chính xác)");
+                      setOptA("Đúng");
                       setOptB("Sai");
                     }}
                     className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
@@ -678,7 +686,7 @@ export function Dashboard() {
                         : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
                     }`}
                   >
-                    Đúng / Sai (2 đáp án)
+                    Đúng / Sai
                   </button>
                 </div>
               </div>
@@ -700,7 +708,7 @@ export function Dashboard() {
               {qType === "boolean" ? (
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-emerald-300">
-                    A. Đúng (Chính xác)
+                    A. Đúng
                   </div>
                   <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-rose-300">
                     B. Sai
@@ -776,7 +784,7 @@ export function Dashboard() {
               </div>
               <button
                 type="submit"
-                className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 font-semibold text-xs shadow-md cursor-pointer"
+                className="w-full h-10 rounded-xl bg-[#D94B76] font-semibold text-xs shadow-md cursor-pointer"
               >
                 Lưu Câu Hỏi
               </button>
@@ -843,7 +851,7 @@ export function Dashboard() {
                 <button
                   type="button"
                   onClick={handleDownloadCSV}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
                 >
                   Tải File CSV Gửi Thủ Công
                 </button>
@@ -943,7 +951,7 @@ export function Dashboard() {
                                   notify(`Đã sao chép link của ${girl.name}!`);
                                 }
                               }}
-                              className="px-3 py-1 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-[11px] shadow-sm hover:opacity-95 transition-all cursor-pointer"
+                              className="px-3 py-1 rounded-lg bg-[#D94B76] text-white font-semibold text-[11px] shadow-sm hover:bg-[#C23D66] transition-all cursor-pointer"
                             >
                               Sao Chép Link
                             </button>

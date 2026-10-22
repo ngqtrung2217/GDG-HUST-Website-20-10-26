@@ -78,13 +78,145 @@ const TEST_QUESTIONS_FIXTURE: Question[] = [
     question_type: "multiple_choice",
     text: "Ngày Phụ nữ Việt Nam 20/10 tôn vinh ai?",
     options: [
-      { key: "a", label: "Những người phụ nữ Việt Nam tuyệt vời" },
+      { key: "a", label: "Phụ nữ Việt Nam" },
       { key: "b", label: "Phương án khác" },
     ],
     correct_key: "a",
     clue: "Gợi ý: Tìm gặp các bạn nam để cùng nhận mã bí mật nhé!",
   },
 ];
+
+// Clue letter per question position, shared by every team.
+const CLUES = ["K", "T", "R", "M", "X"];
+
+function mc(id: string, n: number, text: string, labels: string[], correct: OptionKey): Question {
+  const keys: OptionKey[] = ["a", "b", "c", "d"];
+  return {
+    id,
+    group_id: "grp_hust",
+    question_type: "multiple_choice",
+    text,
+    options: labels.map((label, i) => ({ key: keys[i], label })),
+    correct_key: correct,
+    clue: `Nhận kí tự: ${CLUES[n - 1]}`,
+  };
+}
+
+// Typed-answer question: no options, she types the answer (see isCorrectAnswer).
+function typed(id: string, n: number, text: string, answer: string): Question {
+  return {
+    id,
+    group_id: "grp_hust",
+    question_type: "text",
+    text,
+    options: [],
+    correct_key: "a", // unused for typed questions
+    answer,
+    clue: `Nhận kí tự: ${CLUES[n - 1]}`,
+  };
+}
+
+// Case and spaces don't matter: "gdg hust" == "GDGHUST".
+export function normalizeAnswer(value: string): string {
+  return value.toUpperCase().replace(/\s+/g, "");
+}
+
+export function isCorrectAnswer(q: Question, given: string): boolean {
+  if (q.question_type === "text") return normalizeAnswer(given) === normalizeAnswer(q.answer ?? "");
+  return q.correct_key === given;
+}
+
+const COMMON_QUESTIONS: Question[] = [
+  mc("q_1", 1, "Câu lạc bộ GDG-HUST chính thức được thành lập vào năm nào?", ["2018", "2019", "2020", "2021"], "c"),
+  mc("q_2", 2, "Sự kiện thường niên nổi bật nhất do GDG-HUST tổ chức là gì?", ["Hackathon", "CodeCamp", "TechDay", "DevFest"], "a"),
+  mc("q_3", 3, "Trang phục truyền thống của người con gái Việt Nam là gì?", ["Áo tứ thân", "Áo bà ba", "Áo dài", "Áo nhật bình"], "c"),
+];
+
+// Question 5 is the same for every group.
+const Q5_TEXT =
+  "Trong khoa học máy tính, mỗi ký tự chữ cái đều được định danh bằng một mã số ASCII (hệ thập phân). Biết chữ A = 65, hãy giải mã dãy số sau để tìm ra từ ghép bí ẩn gửi tặng những cô gái tuyệt vời: 66 - 76 - 79 - 79 - 77 - 65 - 90 - 73 - 78 - 71";
+const q5 = (id: string): Question => ({
+  ...typed(id, 5, Q5_TEXT, "BLOOMAZING"),
+  hint: "Gợi ý: Nhập đáp án bằng tiếng Anh viết hoa, không dấu cách.",
+});
+
+// Questions 4–5 differ per group ("Nhóm 1".."Nhóm 7"); picked from girl.quiz_group.
+export const TEAM_QUESTIONS: Record<string, Question[]> = {
+  "1": [
+    ...COMMON_QUESTIONS,
+    typed("t1_q_4", 4, "Cho phương trình: 2x + 6 = 10. Tính x. Dãy số sau đã bị cộng thêm x đơn vị: 18, 27, 22, 10, 17, 16. Giải phương trình và giải mã thông điệp.", "PYTHON"),
+    q5("t1_q_5"),
+  ],
+  "2": [
+    ...COMMON_QUESTIONS,
+    typed("t2_q_4", 4, "Cho phương trình x^2 - 9 = 0 (x > 0). Dãy số sau đã bị trừ đi x: 0, 5, 15, 12, 10, 2. Giải mã thông điệp.", "CHROME"),
+    q5("t2_q_5"),
+  ],
+  "3": [
+    ...COMMON_QUESTIONS,
+    typed("t3_q_4", 4, "Tính biểu thức k = 15 - 3 × 4. Dãy số sau đã bị cộng thêm k: 7, 4, 23, 4. Giải mã thông điệp.", "DATA"),
+    q5("t3_q_5"),
+  ],
+  "4": [
+    ...COMMON_QUESTIONS,
+    typed("t4_q_4", 4, "Cho biểu thức: x = √16 + 1. Dãy số sau đã bị trừ đi x: 8, -4, 15, -2, 3. Tìm x và giải mã thông điệp.", "MATCH"),
+    q5("t4_q_5"),
+  ],
+  "5": [
+    ...COMMON_QUESTIONS,
+    typed("t5_q_4", 4, "Cho phương trình: 3x - 5 = 10. Tính x. Dãy số mã hóa (cộng thêm x): 16, 10, 30, 7, 20, 6, 23, 9. Hãy tìm x và giải mã.", "KEYBOARD"),
+    q5("t5_q_5"),
+  ],
+  "6": [
+    ...COMMON_QUESTIONS,
+    typed("t6_q_4", 4, "Cho phép tính: x = 10 - √36. Dãy số mã hóa (trừ đi x): -1, 11, 0, 5, 10, 3. Hãy tìm x và giải mã thông điệp.", "CODING"),
+    q5("t6_q_5"),
+  ],
+  "7": [
+    ...COMMON_QUESTIONS,
+    typed("t7_q_4", 4, "Cho phép tính: x = 2^3 - 5. Dãy số sau đã bị trừ đi x: 8, 2, 22, 20, 12, 15, 1. Tìm x và giải mã thông điệp.", "KEYWORD"),
+    q5("t7_q_5"),
+  ],
+};
+
+// Used when no questions have been added from the dashboard and the girl has no known quiz group.
+export const DEFAULT_QUESTIONS: Question[] = TEAM_QUESTIONS["1"];
+
+// What the public key may read (must match the GRANTs in supabase/secure.sql).
+const PUBLIC_GROUP_COLUMNS = "id, group_name, wish_message, created_at";
+const PUBLIC_BOY_COLUMNS =
+  "id, group_id, name, description, personal_wish, ornament_type, gift_hint, has_written_wish, assigned_girl_name";
+
+declare const __DEMO_GIRL_CODE__: string | undefined; // set by vite.config.ts for npm run dev only
+
+// Local test girl for `npm run dev` (code = DEMO_GIRL_CODE in .env). Never in builds or Supabase.
+export function demoGirl(code: string): Girl | null {
+  const demoCode = typeof __DEMO_GIRL_CODE__ === "string" ? __DEMO_GIRL_CODE__ : "";
+  if (!demoCode || code.trim().toUpperCase() !== demoCode.toUpperCase()) return null;
+  return {
+    id: "girl_demo",
+    group_id: "grp_hust",
+    name: "Bạn Demo",
+    token: demoCode,
+    quiz_group: "Nhóm 1",
+    current_question_index: 0,
+    wrong_attempts: 0,
+    stage: "not_started",
+    welcome_wish: "Đây là lá thư thử nghiệm của GDG-HUST. Chúc bạn một ngày 20/10 thật rạng rỡ!",
+  };
+}
+
+// How many letters on the tree each girl can open. Girls are not told about the limit.
+export const OPENABLE_PER_GIRL = 3;
+
+function hashString(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
 
 export interface AppDatabaseOptions {
   storageKey?: string;
@@ -103,8 +235,16 @@ export class AppDatabaseService {
   private syncTimer: any = null;
 
   constructor(options?: AppDatabaseOptions) {
-    this.storageKey = options?.storageKey || "bloom_2010_database_realtime_v1";
+    this.storageKey = options?.storageKey || "bloom_2010_database_realtime_v2";
     this.isMemoryOnly = Boolean(options?.isMemoryOnly);
+    // v1 cached every girl's code from before supabase/secure.sql; drop it.
+    if (!this.isMemoryOnly && typeof localStorage !== "undefined") {
+      try {
+        localStorage.removeItem("bloom_2010_database_realtime_v1");
+      } catch {
+        // ignore
+      }
+    }
     this.enableSupabase = Boolean(options?.enableSupabase);
     this.sessionUnlockedCodes = this.loadSessionUnlockedCodes();
     this.state = this.loadFromStorage();
@@ -290,11 +430,11 @@ export class AppDatabaseService {
     if (!this.enableSupabase || !supabase.isConfigured()) return false;
 
     try {
-      const [remoteGroups, remoteBoys, remoteGirls, remoteQuestions] = await Promise.all([
-        supabase.from<Group>("groups"),
-        supabase.from<Boy>("boys"),
-        supabase.from<Girl>("girls"),
-        supabase.from<Question>("questions"),
+      // Girls and questions are private (supabase/secure.sql): girls come one at a time via loginGirl,
+      // questions from TEAM_QUESTIONS in this bundle.
+      const [remoteGroups, remoteBoys] = await Promise.all([
+        supabase.from<Group>("groups", PUBLIC_GROUP_COLUMNS),
+        supabase.from<Boy>("boys", PUBLIC_BOY_COLUMNS),
       ]);
 
       let changed = false;
@@ -305,29 +445,12 @@ export class AppDatabaseService {
             this.state.groups = remoteGroups;
             changed = true;
           }
-        } else {
-          // Initialize default group on remote if none exists
-          supabase.insert<Group>("groups", DEFAULT_GROUPS[0]).catch(() => {});
         }
       }
 
       if (Array.isArray(remoteBoys)) {
         if (JSON.stringify(this.state.boys) !== JSON.stringify(remoteBoys)) {
           this.state.boys = remoteBoys;
-          changed = true;
-        }
-      }
-
-      if (Array.isArray(remoteGirls)) {
-        if (JSON.stringify(this.state.girls) !== JSON.stringify(remoteGirls)) {
-          this.state.girls = remoteGirls;
-          changed = true;
-        }
-      }
-
-      if (Array.isArray(remoteQuestions)) {
-        if (JSON.stringify(this.state.questions) !== JSON.stringify(remoteQuestions)) {
-          this.state.questions = remoteQuestions;
           changed = true;
         }
       }
@@ -347,10 +470,53 @@ export class AppDatabaseService {
     return this.enableSupabase && supabase.isConfigured();
   }
 
+  // Asks Supabase for just this girl (girl_login RPC) and caches her locally. Falls back to the local list.
+  public async loginGirl(token: string): Promise<Girl | null> {
+    const clean = token.trim();
+    if (!clean) return null;
+    const demo = demoGirl(clean);
+    if (demo) {
+      this.state.girls = [...this.state.girls.filter((g) => g.id !== demo.id), demo];
+      return demo;
+    }
+    if (!this.isUsingSupabase()) return this.getGirlByToken(clean);
+
+    const { data, error } = await supabase.client.rpc("girl_login", { p_token: clean });
+    if (error) {
+      console.warn("[Supabase] girl_login error:", error.message);
+      return this.getGirlByToken(clean);
+    }
+    if (!data) return null;
+
+    const remote = data as Girl;
+    const idx = this.state.girls.findIndex((g) => g.id === remote.id);
+    if (idx >= 0) this.state.girls[idx] = remote;
+    else this.state.girls.push(remote);
+    this.saveToStorage();
+    return remote;
+  }
+
+  private saveGirlProgress(girl: Girl): void {
+    // The shared boys' code replays groups freely; its progress is never stored.
+    if (!this.isUsingSupabase() || girl.is_checker) return;
+    Promise.resolve(
+      supabase.client.rpc("girl_save_progress", {
+        p_token: girl.token,
+        p_index: girl.current_question_index,
+        p_wrong: girl.wrong_attempts,
+        p_stage: girl.stage,
+        p_completed_at: girl.completed_at ?? null,
+      })
+    ).then(({ error }) => {
+      if (error) console.warn("[Supabase] girl_save_progress error:", error.message);
+    });
+  }
+
   public getGirlByToken(token: string): Girl | null {
     const clean = token.trim();
     if (!clean) return null;
-    return this.state.girls.find((g) => g.token === clean) || null;
+    const upper = clean.toUpperCase();
+    return this.state.girls.find((g) => g.token.toUpperCase() === upper) || null;
   }
 
   public getBoyByToken(token: string): Boy | null {
@@ -396,13 +562,17 @@ export class AppDatabaseService {
     const groupQuestions = this.state.questions.filter(
       (q) => !q.group_id || q.group_id === girl.group_id
     );
-    return groupQuestions.length > 0 ? groupQuestions : this.state.questions;
+    if (groupQuestions.length > 0) return groupQuestions;
+    if (this.state.questions.length > 0) return this.state.questions;
+    // quiz_group may be stored as "3", "Nhóm 3", "nhom_3"...
+    const team = girl.quiz_group?.match(/\d+/)?.[0];
+    return (team && TEAM_QUESTIONS[team]) || DEFAULT_QUESTIONS;
   }
 
   public submitQuizAnswer(
     token: string,
     questionIndex: number,
-    pickedKey: OptionKey
+    picked: string // option key, or the typed answer for "text" questions
   ): {
     correct: boolean;
     wrong_attempts: number;
@@ -423,7 +593,7 @@ export class AppDatabaseService {
       throw new Error("Không tìm thấy câu hỏi này");
     }
 
-    const isCorrect = question.correct_key === pickedKey;
+    const isCorrect = isCorrectAnswer(question, picked);
 
     if (isCorrect) {
       const nextIndex = questionIndex + 1;
@@ -439,14 +609,7 @@ export class AppDatabaseService {
       this.saveToStorage();
       this.notifyListeners();
 
-      if (this.isUsingSupabase()) {
-        supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-          current_question_index: girl.current_question_index,
-          wrong_attempts: 0,
-          stage: girl.stage,
-          completed_at: girl.completed_at,
-        }).catch(() => {});
-      }
+      this.saveGirlProgress(girl);
 
       return {
         correct: true,
@@ -464,12 +627,7 @@ export class AppDatabaseService {
       this.saveToStorage();
       this.notifyListeners();
 
-      if (this.isUsingSupabase()) {
-        supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-          wrong_attempts: newWrong,
-          stage: "quiz",
-        }).catch(() => {});
-      }
+      this.saveGirlProgress(girl);
 
       return {
         correct: false,
@@ -494,14 +652,7 @@ export class AppDatabaseService {
     this.saveToStorage();
     this.notifyListeners();
 
-    if (this.isUsingSupabase()) {
-      supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-        current_question_index: 0,
-        wrong_attempts: 0,
-        stage: "not_started",
-        completed_at: null as any,
-      }).catch(() => {});
-    }
+    this.saveGirlProgress(girl);
 
     return girl;
   }
@@ -524,14 +675,7 @@ export class AppDatabaseService {
     }
     this.saveToStorage();
     this.notifyListeners();
-    if (this.isUsingSupabase()) {
-      supabase.update<Girl>("girls", `token=eq.${girl.token}`, {
-        current_question_index: nextIndex,
-        wrong_attempts: 0,
-        stage: girl.stage,
-        completed_at: girl.completed_at,
-      }).catch(() => {});
-    }
+    this.saveGirlProgress(girl);
     return { nextIndex, completed: isCompleted, girl };
   }
 
@@ -560,8 +704,8 @@ export class AppDatabaseService {
 
     let group = this.state.groups.find(
       (g) =>
-        g.group_access_code.toUpperCase() === cleanCode ||
-        g.secret_code.toUpperCase() === cleanCode
+        g.group_access_code?.toUpperCase() === cleanCode ||
+        g.secret_code?.toUpperCase() === cleanCode
     );
     if (!group) {
       group = this.state.groups[0] || DEFAULT_GROUPS[0];
@@ -604,27 +748,51 @@ export class AppDatabaseService {
     this.saveToStorage();
     this.notifyListeners();
 
+    return { success: true, boy: { ...boy } };
+  }
+
+  public async submitBoyWishAsync(
+    accessCode: string,
+    rawName: string,
+    secretCode: string,
+    wish: string,
+    ornamentType?: OrnamentType,
+    assignedGirlName?: string,
+    giftHint?: string
+  ): Promise<{ success: boolean; boy?: Boy; message?: string }> {
+    const res = this.submitBoyWish(
+      accessCode,
+      rawName,
+      secretCode,
+      wish,
+      ornamentType,
+      assignedGirlName,
+      giftHint
+    );
+    if (!res.success || !res.boy) return res;
+
     if (this.isUsingSupabase()) {
-      // Ensure group exists then upsert boy and gifts
-      supabase.insert<Group>("groups", group).then(() => {
-        supabase.insert<Boy>("boys", boy!);
-        if (boy?.secret_code) {
-          void Promise.resolve(
-            supabase.client.from("gifts").upsert({
-              id: boy.id,
-              code: boy.secret_code.trim().toUpperCase(),
-              recipient_name: boy.assigned_girl_name || "",
-              sender_name: boy.name,
-              message: boy.personal_wish || "",
-              gift_content: boy.gift_hint || "",
-              ornament_type: boy.ornament_type || "lotus",
-            })
-          ).catch(() => {});
-        }
-      }).catch((err) => console.warn("[Supabase] submitBoyWish error:", err));
+      const b = res.boy;
+      // Supabase only accepts the wish with the boys' code (supabase/secure.sql).
+      const { error } = await supabase.client.rpc("submit_boy_wish", {
+        p_code: accessCode.trim(),
+        p_group_id: b.group_id,
+        p_name: b.name,
+        p_secret_code: b.secret_code || "",
+        p_wish: b.personal_wish,
+        p_ornament: b.ornament_type,
+        p_assigned_girl_name: b.assigned_girl_name || "",
+        p_gift_hint: b.gift_hint || "",
+      });
+      if (error) {
+        console.warn("[Supabase] submit_boy_wish error:", error.message);
+        return { success: false, message: "Chưa gửi được lời chúc, bạn thử lại giúp mình nhé!" };
+      }
+      // Pull the saved row (server-made id) so the tree matches Supabase.
+      await this.syncFromSupabase();
     }
 
-    return { success: true, boy: { ...boy } };
+    return res;
   }
 
   public verifySecretCode(
@@ -635,12 +803,13 @@ export class AppDatabaseService {
     group?: Group;
     boys?: Boy[];
     unlockedBoy?: Boy;
+    blocked?: boolean;
   } {
     const clean = code.trim().toUpperCase();
     if (!clean) return { success: false };
 
     const matchingGroup = this.state.groups.find(
-      (g) => g.secret_code.toUpperCase() === clean
+      (g) => g.secret_code?.toUpperCase() === clean
     );
     const matchingBoy = this.state.boys.find(
       (b) => b.secret_code && b.secret_code.trim().toUpperCase() === clean
@@ -650,6 +819,11 @@ export class AppDatabaseService {
 
     if (!isGroupCode && !matchingBoy) {
       return { success: false };
+    }
+
+    const girlForLimit = girlToken ? this.getGirlByToken(girlToken) : null;
+    if (girlForLimit && matchingBoy && !this.getOpenableBoyIds(girlForLimit).has(matchingBoy.id)) {
+      return { success: false, blocked: true };
     }
 
     const group =
@@ -702,8 +876,8 @@ export class AppDatabaseService {
     unlockedBoy?: Boy;
   }> {
     const syncResult = this.verifySecretCode(code, girlToken);
-    if (syncResult.success) {
-      return syncResult;
+    if (syncResult.success || syncResult.blocked) {
+      return { success: syncResult.success };
     }
 
     const clean = code.trim().toUpperCase();
@@ -754,6 +928,13 @@ export class AppDatabaseService {
             existingBoy.gift_hint = gift.gift_content || existingBoy.gift_hint;
           }
 
+          const limitedGirl = girlToken ? this.getGirlByToken(girlToken) : null;
+          if (limitedGirl && !this.getOpenableBoyIds(limitedGirl).has(existingBoy.id)) {
+            this.saveToStorage();
+            this.notifyListeners();
+            return { success: false };
+          }
+
           this.sessionUnlockedCodes.add(clean);
           this.saveSessionUnlockedCodes();
           this.saveToStorage();
@@ -784,6 +965,23 @@ export class AppDatabaseService {
     return { success: false };
   }
 
+  // Stable per girl: boys are ranked by a hash of girl token + boy id, so the pick survives reloads.
+  public getOpenableBoyIds(girl: Girl): Set<string> {
+    const boys = this.state.boys.filter(
+      (b) => b.secret_code && (!b.group_id || b.group_id === girl.group_id)
+    );
+    const ranked = [...boys].sort(
+      (a, b) => hashString(girl.token + a.id) - hashString(girl.token + b.id)
+    );
+    const ids = new Set(ranked.slice(0, OPENABLE_PER_GIRL).map((b) => b.id));
+    // Letters she already opened stay open even if new boys change the ranking.
+    const opened = new Set((girl.unlocked_codes || []).map((c) => c.toUpperCase()));
+    boys.forEach((b) => {
+      if (opened.has(b.secret_code!.trim().toUpperCase())) ids.add(b.id);
+    });
+    return ids;
+  }
+
   public getTreeData(girlToken?: string, preferredGroupId?: string) {
     let activeGroup: Group | null = null;
     let girl: Girl | null = null;
@@ -792,12 +990,11 @@ export class AppDatabaseService {
       activeGroup = this.state.groups.find((g) => g.id === preferredGroupId) || null;
     }
 
-    if (!activeGroup && girlToken) {
-      girl = this.getGirlByToken(girlToken);
-      if (girl) {
-        const girlGroupId = girl.group_id;
-        activeGroup = this.state.groups.find((g) => g.id === girlGroupId) || null;
-      }
+    if (girlToken) girl = this.getGirlByToken(girlToken);
+
+    if (!activeGroup && girl) {
+      const girlGroupId = girl.group_id;
+      activeGroup = this.state.groups.find((g) => g.id === girlGroupId) || null;
     }
 
     if (!activeGroup && this.state.groups.length > 0) {
@@ -805,7 +1002,7 @@ export class AppDatabaseService {
     }
 
     const groupBoys = activeGroup
-      ? this.state.boys.filter((b) => b.group_id === activeGroup.id)
+      ? this.state.boys.filter((b) => !b.group_id || b.group_id === activeGroup.id)
       : this.state.boys;
 
     const unlockedCodes = new Set<string>([
@@ -813,23 +1010,17 @@ export class AppDatabaseService {
       ...Array.from(this.sessionUnlockedCodes).map((c) => c.toUpperCase()),
     ]);
 
-    const isGlobalUnlocked = Boolean(
-      activeGroup &&
-      unlockedCodes.has(activeGroup.secret_code.toUpperCase())
-    );
 
     return {
       group: activeGroup,
       groups: this.state.groups,
       boys: groupBoys,
       allBoys: this.state.boys,
-      isUnlocked: isGlobalUnlocked,
+      // The tree is open: every wish can be read without a code.
+      isUnlocked: true,
       unlockedCodes: Array.from(unlockedCodes),
-      isBoyUnlocked: (boy: Boy) => {
-        if (isGlobalUnlocked) return true;
-        if (!boy.secret_code) return isGlobalUnlocked;
-        return unlockedCodes.has(boy.secret_code.trim().toUpperCase());
-      },
+      isBoyOpenable: (_boy: Boy) => true,
+      isBoyUnlocked: (_boy: Boy) => true,
       girl,
     };
   }
@@ -1107,7 +1298,7 @@ export class AppDatabaseService {
 }
 
 export const dbService = new AppDatabaseService({
-  storageKey: "bloom_2010_database_realtime_v1",
+  storageKey: "bloom_2010_database_realtime_v2",
   enableSupabase: true,
   isMemoryOnly: false,
 });

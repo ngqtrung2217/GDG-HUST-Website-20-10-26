@@ -49,10 +49,14 @@ export interface Girl {
   unlocked_codes?: string[];
   assigned_boy_id?: string;
   assigned_boy_name?: string;
+  team?: string;
+  quiz_group?: string; // "Nhóm 1".."Nhóm 7", picks quiz questions 4-5
+  is_checker?: boolean; // checker code: sees every group's answers instead of playing
+  welcome_wish?: string;
 }
 
 export type OptionKey = "a" | "b" | "c" | "d";
-export type QuestionType = "multiple_choice" | "boolean";
+export type QuestionType = "multiple_choice" | "boolean" | "text";
 
 export interface Question {
   id: string;
@@ -65,6 +69,8 @@ export interface Question {
     label: string;
   }[];
   correct_key: OptionKey;
+  hint?: string; // small note shown under the question text
+  answer?: string; // question_type "text": what she must type (case and spaces ignored)
   clue: string;
 }
 

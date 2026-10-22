@@ -7,11 +7,10 @@ interface ViralTree2010Props {
   boys: Boy[];
   isUnlocked: boolean;
   isBoyUnlocked?: (boy: Boy) => boolean;
+  isBoyOpenable?: (boy: Boy) => boolean;
   onSelectBoy: (boy: Boy) => void;
-  onOpenSecretCodeModal: () => void;
   onOpenBoyLoginModal: () => void;
   onOpenGirlAccountModal: () => void;
-  onDirectUnlockCode?: (code: string) => boolean | void | Promise<boolean | void>;
 }
 
 const ORNAMENT_ICONS: Record<string, string> = {
@@ -43,13 +42,11 @@ export function ViralTree2010({
   boys,
   isUnlocked,
   isBoyUnlocked,
+  isBoyOpenable,
   onSelectBoy,
-  onOpenSecretCodeModal,
   onOpenBoyLoginModal,
   onOpenGirlAccountModal,
-  onDirectUnlockCode,
 }: ViralTree2010Props) {
-  const [inputCode, setInputCode] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
   const totalPages = Math.max(1, Math.ceil(boys.length / itemsPerPage));
@@ -57,26 +54,10 @@ export function ViralTree2010({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentBoys = boys.slice(startIndex, startIndex + itemsPerPage);
 
-  async function handleQuickSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!inputCode.trim()) {
-      onOpenSecretCodeModal();
-      return;
-    }
-    if (onDirectUnlockCode) {
-      await onDirectUnlockCode(inputCode.trim());
-      setInputCode("");
-    } else {
-      onOpenSecretCodeModal();
-    }
-  }
-
   return (
-    <div className="relative w-full min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#FAF7F2] via-[#F6ECE9] to-[#F1DEE3] text-[#2C1820] overflow-x-hidden font-sans select-none pb-28 pt-20 sm:pt-24">
+    <div className="relative w-full min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#FAF7F2] via-[#F6ECE9] to-[#F1DEE3] text-[#2C1820] overflow-x-hidden font-sans select-none pb-28 pt-4 sm:pt-6">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[760px] h-[480px] bg-[#FCE8ED]/40 rounded-full blur-[140px]" />
-        <div className="absolute top-1/3 left-10 w-96 h-96 bg-[#FAD2DC]/25 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 right-10 w-96 h-96 bg-[#FDF0E6]/35 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(252,232,237,0.6),transparent),radial-gradient(circle_at_15%_45%,rgba(250,210,220,0.3),transparent_40%),radial-gradient(circle_at_85%_45%,rgba(253,240,230,0.4),transparent_40%)]" />
 
         {[...Array(14)].map((_, i) => (
           <div
@@ -125,11 +106,11 @@ export function ViralTree2010({
         </div>
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto px-2 sm:px-4 my-auto">
-        <div className="relative w-full aspect-[1000/620] max-h-[62vh] mx-auto">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-5xl mx-auto px-2 sm:px-4 my-auto">
+        <div className="relative w-full max-w-[calc(72vh*1000/620)] aspect-[1000/620] mx-auto">
           <svg
             viewBox="0 0 1000 620"
-            className="w-full h-full block drop-shadow-[0_20px_40px_rgba(136,73,90,0.12)] select-none pointer-events-none"
+            className="w-full h-full block select-none pointer-events-none"
           >
             <defs>
               <linearGradient id="trunkBark" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -360,6 +341,7 @@ export function ViralTree2010({
           {currentBoys.map((boy, idx) => {
             const coord = BRANCH_COORDINATES[idx % BRANCH_COORDINATES.length];
             const unlocked = isBoyUnlocked ? isBoyUnlocked(boy) : isUnlocked;
+            const shines = !unlocked && Boolean(isBoyOpenable?.(boy));
             const giftIcon = ORNAMENT_ICONS[boy.ornament_type] || "🌸";
             return (
               <div
@@ -370,7 +352,7 @@ export function ViralTree2010({
               >
                 <div className="w-[1px] h-3.5 sm:h-5 bg-gradient-to-b from-[#C5A059] to-[#916B14] shadow-xs -mb-0.5" />
 
-                <div className="relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#FFFDF9]/95 backdrop-blur-xs border border-[#E8D7DC] shadow-[0_4px_16px_-2px_rgba(136,73,90,0.14)] group-hover:border-[#E06D88] group-hover:shadow-[0_8px_24px_-3px_rgba(224,109,136,0.3)] transition-all">
+                <div className={`relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#FFFDF9]/95 border border-[#E8D7DC] shadow-[0_4px_16px_-2px_rgba(136,73,90,0.14)] group-hover:border-[#E06D88] group-hover:shadow-[0_8px_24px_-3px_rgba(224,109,136,0.3)] transition-all ${shines ? "animate-glow-2010 border-[#E06D88]" : ""}`}>
                   <span className="shrink-0 flex items-center justify-center size-4 sm:size-5 rounded-full bg-[#FAF0EE] border border-[#F0D5DA] text-[10px] sm:text-xs">
                     {giftIcon}
                   </span>
@@ -401,7 +383,7 @@ export function ViralTree2010({
               <button
                 type="button"
                 onClick={onOpenBoyLoginModal}
-                className="mt-2.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white text-[11px] sm:text-xs font-semibold shadow-md shadow-pink-500/20 cursor-pointer transition-all active:scale-95"
+                className="mt-2.5 px-3.5 py-1.5 rounded-full bg-[#D94B76] hover:bg-[#C23D66] text-white text-[11px] sm:text-xs font-semibold shadow-sm cursor-pointer transition-all active:scale-95"
               >
                 Gửi lời chúc ngay
               </button>
@@ -435,26 +417,6 @@ export function ViralTree2010({
       </div>
 
       <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 sm:gap-2 max-w-[95vw] w-full sm:w-auto px-2">
-        <form
-          onSubmit={handleQuickSubmit}
-          className="flex items-center w-full sm:w-[440px] h-11 sm:h-13 px-2 py-1 rounded-full backdrop-blur-xl bg-white/90 border border-white/95 shadow-[0_12px_32px_-6px_rgba(136,73,90,0.2)]"
-        >
-          <input
-            type="text"
-            value={inputCode}
-            onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-            placeholder="Nhập mã mở quà (VD: 2010)..."
-            className="flex-1 h-full px-3 sm:px-4 bg-transparent text-xs sm:text-sm text-[#2C1820] placeholder:text-[#826A73]/60 focus:outline-none font-mono uppercase tracking-wider min-w-0"
-          />
-
-          <button
-            type="submit"
-            className="h-8 sm:h-10 px-3.5 sm:px-5 rounded-full bg-gradient-to-r from-[#E06D88] to-[#CC5572] hover:from-[#CC5572] hover:to-[#B83E5D] text-white text-[11px] sm:text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
-          >
-            Mở Lời Chúc
-          </button>
-        </form>
-
         <div className="flex items-center gap-2.5 sm:gap-4 text-[10px] sm:text-[11px] text-[#826A73]">
           <button
             type="button"

@@ -72,7 +72,7 @@ export function BoyWishComposerModal({
     }
   }
 
-  function handleSubmitWish(e: React.FormEvent) {
+  async function handleSubmitWish(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
@@ -98,7 +98,7 @@ export function BoyWishComposerModal({
 
     const cleanSecret = secretCode.trim().toUpperCase();
 
-    const result = dbService.submitBoyWish(
+    const result = await dbService.submitBoyWishAsync(
       accessCode.trim(),
       boyName.trim(),
       cleanSecret,
@@ -160,7 +160,7 @@ export function BoyWishComposerModal({
                 Thẻ Xác Nhận Mã Bí Mật
               </h2>
               <p className="text-xs text-pink-200/80 mt-1 max-w-sm mx-auto leading-relaxed">
-                Chụp ảnh màn hình thẻ này để gửi riêng cho bạn nữ mở quà trên Cây Ước Nguyện.
+                Gửi mã này cho bạn nữ để mở thư trên cây.
               </p>
 
               <div
@@ -220,7 +220,7 @@ export function BoyWishComposerModal({
                 <button
                   type="button"
                   onClick={handleCloseAll}
-                  className="w-full sm:w-1/2 h-11 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-pink-500/25 transition-all cursor-pointer"
+                  className="w-full sm:w-1/2 h-11 rounded-2xl bg-[#D94B76] hover:bg-[#C23D66] text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
                 >
                   Hoàn Tất & Xem Cây
                 </button>
@@ -236,7 +236,7 @@ export function BoyWishComposerModal({
                   Gửi Gắm Lời Chúc 20/10
                 </h2>
                 <p className="text-xs text-white/60 mt-1">
-                  Tự đặt mã bí mật cho bức thư để gửi tặng bạn nữ mở quà trên cây.
+                  Đặt mã bí mật để bạn nữ mở thư trên cây.
                 </p>
               </div>
 
@@ -320,7 +320,7 @@ export function BoyWishComposerModal({
                     className="w-full h-11 px-3.5 rounded-xl bg-white/10 border border-white/20 text-white font-mono uppercase tracking-wider text-xs focus:outline-none focus:border-pink-400 placeholder:text-white/30 placeholder:normal-case placeholder:font-sans"
                   />
                   <p className="text-[10px] text-white/40 mt-1">
-                    Mã này sẽ hiển thị ở thẻ xác nhận để bạn chụp màn hình gửi riêng cho bạn nữ.
+                    Gửi mã này cho bạn nữ để mở thư trên cây.
                   </p>
                 </div>
 
@@ -336,7 +336,7 @@ export function BoyWishComposerModal({
                         onClick={() => setOrnamentType(item.type)}
                         className={`h-11 rounded-xl text-[11px] font-medium border flex flex-col items-center justify-center transition-all cursor-pointer ${
                           ornamentType === item.type
-                            ? "bg-pink-500 border-pink-300 text-white font-bold shadow-md shadow-pink-500/30 scale-105"
+                            ? "bg-pink-500 border-pink-300 text-white font-bold shadow-sm scale-105"
                             : "bg-white/5 border-white/15 text-white/70 hover:bg-white/10"
                         }`}
                       >
@@ -354,7 +354,7 @@ export function BoyWishComposerModal({
                   <textarea
                     rows={3}
                     required
-                    placeholder="Viết những lời chân thành gửi gắm tới các bạn nữ nhân ngày 20/10..."
+                    placeholder="Nhập lời chúc gửi tặng các bạn nữ..."
                     value={personalWish}
                     onChange={(e) => setPersonalWish(e.target.value)}
                     className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white text-xs leading-relaxed focus:outline-none focus:border-pink-400 resize-none placeholder:text-white/30"
@@ -364,7 +364,7 @@ export function BoyWishComposerModal({
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full h-11 rounded-2xl bg-gradient-to-r from-[#FF2B6D] via-[#FF3366] to-[#E91E63] hover:opacity-95 text-xs font-bold text-white shadow-lg shadow-pink-500/30 transition-all active:scale-[0.98] cursor-pointer"
+                    className="w-full h-11 rounded-2xl bg-[#D94B76] hover:bg-[#C23D66] text-xs font-bold text-white shadow-sm transition-all active:scale-[0.98] cursor-pointer"
                   >
                     Treo Lời Chúc Lên Cây
                   </button>

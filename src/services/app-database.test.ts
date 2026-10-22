@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AppDatabaseService } from "./app-database.ts";
+import { AppDatabaseService, TEAM_QUESTIONS, isCorrectAnswer } from "./app-database.ts";
 
 test("AppDatabaseService initializes with default groups and girls", () => {
   const db = new AppDatabaseService({
@@ -75,33 +75,51 @@ test("submitQuizAnswer handles multiple attempts and reveals answer", () => {
   assert.equal(correctAttempt.correct, true);
 });
 
-test("verifySecretCode unlocks tree and individual boy letters even without girl token", () => {
-  const db = new AppDatabaseService({
-    isMemoryOnly: true,
-    enableSupabase: false,
-  });
-
-  const treeBefore = db.getTreeData();
-  const minhAnh = treeBefore.boys.find((b) => b.name === "Minh Anh");
-  assert.ok(minhAnh);
-  assert.equal(treeBefore.isBoyUnlocked(minhAnh!), false);
-  assert.equal(treeBefore.isUnlocked, false);
-
-  // Unlock specifically with boy's secret code (SEN)
-  const resBoy = db.verifySecretCode("  sen  ");
-  assert.equal(resBoy.success, true);
-  assert.equal(resBoy.unlockedBoy?.name, "Minh Anh");
-
-  const treeAfterBoy = db.getTreeData();
-  assert.equal(treeAfterBoy.isBoyUnlocked(minhAnh!), true);
-
-  // Group code (2010) unlocks all boys
-  const resGroup = db.verifySecretCode("2010");
-  assert.equal(resGroup.success, true);
-  const treeAfterGroup = db.getTreeData();
-  assert.equal(treeAfterGroup.isUnlocked, true);
-  treeAfterGroup.boys.forEach((b) => {
-    assert.equal(treeAfterGroup.isBoyUnlocked(b), true);
-  });
+test("getQuestionsForGirl falls back to the default questions when none are stored", () => {
+  // No localStorage under node, so this starts with no stored questions.
+  const db = new AppDatabaseService({ enableSupabase: false });
+  const girl = db.getOrCreateGirl("fallback_token");
+  const questions = db.getQuestionsForGirl(girl);
+  assert.equal(questions.length, 5);
+  assert.equal(questions.map((q) => q.clue.slice(-1)).join(""), "KTRMX");
 });
 
+test("the wish tree is open to everyone without a code", () => {
+  const db = new AppDatabaseService({ isMemoryOnly: true, enableSupabase: false });
+  db.submitBoyWish("GDGOC2010", "Boy 1", "CODE1", "Chúc mừng 20/10!", "peach");
+  for (const tree of [db.getTreeData(), db.getTreeData("LANCHI_2010")]) {
+    assert.equal(tree.isUnlocked, true);
+    tree.boys.forEach((b) => assert.equal(tree.isBoyUnlocked(b), true));
+  }
+});
+
+test("each team gets its own questions 4-5 with correct answers", () => {
+  const db = new AppDatabaseService({ enableSupabase: false });
+  const girl = db.getOrCreateGirl("team_token");
+  const answer = (team: string) => {
+    girl.quiz_group = team;
+    return db.getQuestionsForGirl(girl).slice(3).map((q) => {
+      assert.equal(q.question_type, "text", "questions 4-5 are typed");
+      return q.answer!;
+    });
+  };
+  // Decode the shift puzzles independently so a typo in the data shows up here.
+  const shift = (nums: number[], k: number) => nums.map((n) => String.fromCharCode(64 + n + k)).join("");
+  assert.deepEqual(answer("Nhóm 1"), [shift([18, 27, 22, 10, 17, 16], -2), "BLOOMAZING"]);
+  assert.deepEqual(answer("2"), [shift([0, 5, 15, 12, 10, 2], 3), "BLOOMAZING"]);
+  assert.deepEqual(answer("3"), [shift([7, 4, 23, 4], -3), "BLOOMAZING"]);
+  assert.deepEqual(answer("4"), [shift([8, -4, 15, -2, 3], 5), "BLOOMAZING"]);
+  assert.deepEqual(answer("5"), [shift([16, 10, 30, 7, 20, 6, 23, 9], -5), "BLOOMAZING"]);
+  assert.deepEqual(answer("6"), [shift([-1, 11, 0, 5, 10, 3], 4), "BLOOMAZING"]);
+  assert.deepEqual(answer("7"), [shift([8, 2, 22, 20, 12, 15, 1], 3), "BLOOMAZING"]);
+  assert.deepEqual(answer("1"), ["PYTHON", "BLOOMAZING"]);
+  girl.quiz_group = undefined;
+  assert.equal(db.getQuestionsForGirl(girl)[3].id, "t1_q_4");
+});
+
+test("typed answers ignore case and spaces", () => {
+  const q = TEAM_QUESTIONS["5"][4]; // BLOOMAZING
+  for (const ok of ["BLOOMAZING", "bloomazing", "BLOOM AZING", "  bloom  azing "]) assert.equal(isCorrectAnswer(q, ok), true, ok);
+  for (const bad of ["BLOOM", "BLOOMAZIN", ""]) assert.equal(isCorrectAnswer(q, bad), false, bad);
+  assert.equal(isCorrectAnswer(TEAM_QUESTIONS["1"][0], "c"), true, "multiple choice still uses the option key");
+});
